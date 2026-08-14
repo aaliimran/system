@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { completeQuest } from "@/app/quests/actions";
 import { isRedirectError } from "@/lib/is-redirect-error";
+import { LevelUpOverlay } from "./level-up-overlay";
 
 export type QuestItemData = {
   id: string;
@@ -17,6 +18,7 @@ export function QuestItem({ quest }: { quest: QuestItemData }) {
   const [pending, startTransition] = useTransition();
   const [feedback, setFeedback] = useState<string | null>(null);
   const [done, setDone] = useState(quest.status !== "pending");
+  const [levelUp, setLevelUp] = useState<number | null>(null);
   const router = useRouter();
 
   const readOnly = quest.status !== "pending";
@@ -32,6 +34,9 @@ export function QuestItem({ quest }: { quest: QuestItemData }) {
             result.leveledUp ? ` — Level ${result.newLevel}!` : ""
           }`,
         );
+        if (result.characterLeveledUp && result.newCharacterLevel) {
+          setLevelUp(result.newCharacterLevel);
+        }
         setTimeout(() => router.refresh(), 1100);
       } catch (e) {
         if (isRedirectError(e)) throw e;
@@ -42,6 +47,9 @@ export function QuestItem({ quest }: { quest: QuestItemData }) {
 
   return (
     <div className="flex items-center justify-between rounded-md border border-border bg-background px-3 py-2">
+      {levelUp !== null && (
+        <LevelUpOverlay level={levelUp} onDone={() => setLevelUp(null)} />
+      )}
       <div className="flex items-center gap-3">
         <button
           type="button"

@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { skillLevelFromExp } from "@/lib/leveling";
 import { syncComputedStats } from "@/lib/sync-stats";
+import { syncCharacterLevel } from "@/lib/sync-character-level";
 
 export type QuestType =
   | "daily"
@@ -119,5 +120,13 @@ export async function completeQuest(questId: string) {
     await syncComputedStats(supabase, user.id);
   }
 
-  return { awardedExp, leveledUp, newLevel };
+  const character = await syncCharacterLevel(supabase, user.id);
+
+  return {
+    awardedExp,
+    leveledUp,
+    newLevel,
+    characterLeveledUp: character.leveledUp,
+    newCharacterLevel: character.newLevel,
+  };
 }

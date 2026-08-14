@@ -34,6 +34,13 @@ export function characterCumulativeExpForLevel(level: number): number {
   return total;
 }
 
+/** Inverse of characterCumulativeExpForLevel — highest character level reachable with `totalExp`. */
+export function characterLevelFromExp(totalExp: number): number {
+  let level = 1;
+  while (characterCumulativeExpForLevel(level + 1) <= totalExp) level++;
+  return level;
+}
+
 /** Progress within the current character level, for the EXP bar. */
 export function characterLevelProgress(level: number, totalExp: number) {
   const levelStart = characterCumulativeExpForLevel(level);

@@ -78,7 +78,9 @@ export function AddQuestForm({
 
         <div className="flex gap-3">
           <div className="flex flex-1 flex-col gap-1.5">
-            <label className="text-xs text-muted">Skill (optional)</label>
+            <label className="text-xs text-muted">
+              Skill (EXP only counts if linked)
+            </label>
             <select
               value={skillId}
               onChange={(e) => setSkillId(e.target.value)}

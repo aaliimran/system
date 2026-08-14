@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { characterLevelProgress } from "@/lib/leveling";
 import { statCeiling } from "@/lib/stats";
 import { syncComputedStats } from "@/lib/sync-stats";
+import { syncCharacterLevel } from "@/lib/sync-character-level";
 import { StatRadarChart } from "@/components/stat-radar-chart";
 import { AppNav } from "@/components/app-nav";
 import { QuestItem } from "@/components/quest-item";
@@ -22,7 +23,7 @@ export default async function Dashboard() {
 
   const { data: profile } = await supabase
     .from("users")
-    .select("onboarding_completed_at, character_level, character_exp")
+    .select("onboarding_completed_at")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -31,6 +32,7 @@ export default async function Dashboard() {
   }
 
   await syncComputedStats(supabase, user.id);
+  const character = await syncCharacterLevel(supabase, user.id);
 
   const [{ data: stats }, { data: dailyQuests }, { data: fatigued }] =
     await Promise.all([
@@ -48,7 +50,7 @@ export default async function Dashboard() {
     (stats ?? []).map((s) => [s.code as StatCode, s.current_value as number]),
   );
 
-  const ceiling = statCeiling(profile.character_level);
+  const ceiling = statCeiling(character.newLevel);
   const radarStats = STAT_ORDER.map((code) => ({
     code,
     value: statValues.get(code) ?? 0,
@@ -56,8 +58,8 @@ export default async function Dashboard() {
   }));
 
   const { current, needed, percent } = characterLevelProgress(
-    profile.character_level,
-    profile.character_exp,
+    character.newLevel,
+    character.totalExp,
   );
 
   const hasDebuff = (fatigued?.length ?? 0) > 0;
@@ -71,7 +73,7 @@ export default async function Dashboard() {
           System
         </p>
         <p className="mt-1 font-mono text-5xl text-foreground">
-          Lv {profile.character_level}
+          Lv {character.newLevel}
         </p>
         <div className="mt-3 h-1.5 w-56 overflow-hidden rounded-full bg-border">
           <div
