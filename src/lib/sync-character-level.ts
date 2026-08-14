@@ -24,5 +24,14 @@ export async function syncCharacterLevel(supabase: SupabaseClient, userId: strin
     .update({ character_exp: totalExp, character_level: newLevel })
     .eq("id", userId);
 
+  if (leveledUp) {
+    await supabase.from("codex_entries").insert({
+      user_id: userId,
+      entry_type: "character_level_up",
+      title: `Reached Level ${newLevel}`,
+      metadata: { level: newLevel },
+    });
+  }
+
   return { totalExp, newLevel, leveledUp };
 }

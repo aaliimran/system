@@ -5,15 +5,22 @@ const LINKS = [
   { href: "/", label: "Dashboard" },
   { href: "/skills", label: "Skills" },
   { href: "/quests", label: "Quests" },
+  { href: "/stats", label: "Stats" },
   { href: "/achievements", label: "Achievements" },
+  { href: "/codex", label: "Codex" },
   { href: "/settings", label: "Settings" },
 ];
 
-export function AppNav({
-  active,
-}: {
-  active: "/" | "/skills" | "/quests" | "/achievements" | "/settings";
-}) {
+export type AppNavActive =
+  | "/"
+  | "/skills"
+  | "/quests"
+  | "/stats"
+  | "/achievements"
+  | "/codex"
+  | "/settings";
+
+export function AppNav({ active }: { active: AppNavActive }) {
   return (
     <header className="flex items-center gap-3 border-b border-border pb-4">
       <nav className="flex flex-1 gap-4 overflow-x-auto whitespace-nowrap">

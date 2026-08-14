@@ -54,6 +54,58 @@ export async function createQuest(input: CreateQuestInput) {
   }
 }
 
+export type UpdateQuestInput = {
+  title: string;
+  baseExp: number;
+};
+
+// Only pending quests are editable/deletable — a completed one already has
+// quest_logs (history + EXP already applied), which must stay intact.
+export async function updateQuest(questId: string, input: UpdateQuestInput) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error("Not signed in");
+  }
+
+  const title = input.title.trim();
+  if (!title) {
+    throw new Error("Quest title is required");
+  }
+
+  const { error } = await supabase
+    .from("quests")
+    .update({ title, base_exp: Math.max(0, Math.round(input.baseExp)) })
+    .eq("id", questId)
+    .eq("user_id", user.id)
+    .eq("status", "pending");
+
+  if (error) throw new Error(error.message);
+}
+
+export async function deleteQuest(questId: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error("Not signed in");
+  }
+
+  const { error } = await supabase
+    .from("quests")
+    .delete()
+    .eq("id", questId)
+    .eq("user_id", user.id)
+    .eq("status", "pending");
+
+  if (error) throw new Error(error.message);
+}
+
 // PR/breakthrough bonus — CLAUDE.md "XP System": +50% of the action's normal EXP.
 const PR_EXP_MULTIPLIER = 1.5;
 
@@ -69,7 +121,7 @@ export async function completeQuest(questId: string, isPr = false) {
 
   const { data: quest, error: questError } = await supabase
     .from("quests")
-    .select("id, status, base_exp, skill_id")
+    .select("id, status, base_exp, skill_id, type, title")
     .eq("id", questId)
     .single();
 
@@ -106,6 +158,23 @@ export async function completeQuest(questId: string, isPr = false) {
   });
 
   if (logError) throw new Error(logError.message);
+
+  if (quest.type === "boss") {
+    await supabase.from("codex_entries").insert({
+      user_id: user.id,
+      entry_type: "boss_defeated",
+      title: `Boss defeated: ${quest.title}`,
+      metadata: { quest_id: quest.id, awarded_exp: awardedExp },
+    });
+  }
+  if (isPr) {
+    await supabase.from("codex_entries").insert({
+      user_id: user.id,
+      entry_type: "personal_record",
+      title: `Personal record: ${quest.title}`,
+      metadata: { quest_id: quest.id, skill_id: quest.skill_id },
+    });
+  }
 
   let leveledUp = false;
   let newLevel: number | null = null;

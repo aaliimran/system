@@ -52,3 +52,67 @@ export async function createSkill(input: CreateSkillInput) {
   await syncComputedStats(supabase, user.id);
   redirect("/skills");
 }
+
+export type UpdateSkillInput = {
+  name: string;
+  category: SkillCategory;
+  stat: Extract<StatCode, "STR" | "END" | "INT">;
+  isMaintenance: boolean;
+};
+
+export async function updateSkill(skillId: string, input: UpdateSkillInput) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error("Not signed in");
+  }
+
+  const name = input.name.trim();
+  if (!name) {
+    throw new Error("Skill name is required");
+  }
+
+  const { error } = await supabase
+    .from("skills")
+    .update({
+      name,
+      category: input.category,
+      linked_stats: [{ stat: input.stat, weight: 1.0 }],
+      is_maintenance: input.isMaintenance,
+    })
+    .eq("id", skillId)
+    .eq("user_id", user.id);
+
+  if (error) {
+    if (error.code === "23505") {
+      throw new Error(`You already have a skill named "${name}"`);
+    }
+    throw new Error(error.message);
+  }
+
+  await syncComputedStats(supabase, user.id);
+}
+
+export async function deleteSkill(skillId: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error("Not signed in");
+  }
+
+  const { error } = await supabase
+    .from("skills")
+    .delete()
+    .eq("id", skillId)
+    .eq("user_id", user.id);
+
+  if (error) throw new Error(error.message);
+
+  await syncComputedStats(supabase, user.id);
+}

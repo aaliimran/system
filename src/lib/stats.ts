@@ -24,7 +24,8 @@ export function computeSkillDerivedStat(
     totalWeight += link.weight;
   }
 
-  return totalWeight > 0 ? weightedSum / totalWeight : 0;
+  const value = totalWeight > 0 ? weightedSum / totalWeight : 0;
+  return Math.round(value * 10) / 10;
 }
 
 /** Floating radar-chart ceiling — decision #5. Keeps the chart from saturating as the character grows. */

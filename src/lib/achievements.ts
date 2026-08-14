@@ -193,5 +193,16 @@ export async function checkAchievements(
     .select("key, name")
     .in("key", newlyUnlockedKeys);
 
-  return (names ?? []).map((n) => n.name as string);
+  const nameList = (names ?? []).map((n) => n.name as string);
+
+  await supabase.from("codex_entries").insert(
+    (names ?? []).map((n) => ({
+      user_id: userId,
+      entry_type: "achievement_unlocked",
+      title: `Achievement unlocked: ${n.name}`,
+      metadata: { achievement_key: n.key },
+    })),
+  );
+
+  return nameList;
 }
