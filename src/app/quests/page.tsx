@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { AppNav } from "@/components/app-nav";
 import { QuestsTabs } from "./quests-tabs";
+import { LifeHappenedForm } from "./life-happened-form";
+import { processMissedQuests } from "@/lib/recovery";
 
 export default async function QuestsPage() {
   const supabase = await createClient();
@@ -23,6 +25,8 @@ export default async function QuestsPage() {
     redirect("/onboarding");
   }
 
+  await processMissedQuests(supabase, user.id);
+
   const [{ data: quests }, { data: skills }] = await Promise.all([
     supabase
       .from("quests")
@@ -34,7 +38,10 @@ export default async function QuestsPage() {
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-4 py-10">
       <AppNav active="/quests" />
-      <h1 className="text-xl font-semibold text-foreground">Quests</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-semibold text-foreground">Quests</h1>
+        <LifeHappenedForm />
+      </div>
       <QuestsTabs quests={quests ?? []} skills={skills ?? []} />
     </div>
   );

@@ -144,3 +144,36 @@ export async function generateDailyQuests() {
 
   return composeDailyQuests(supabase, user.id);
 }
+
+export type SetLifeHappenedInput = {
+  startDate: string;
+  endDate: string;
+  reason: string;
+};
+
+export async function setLifeHappenedFlag(input: SetLifeHappenedInput) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error("Not signed in");
+  }
+
+  if (!input.startDate || !input.endDate) {
+    throw new Error("Start and end date are required");
+  }
+  if (input.endDate < input.startDate) {
+    throw new Error("End date must be on or after the start date");
+  }
+
+  const { error } = await supabase.from("life_happened_flags").insert({
+    user_id: user.id,
+    start_date: input.startDate,
+    end_date: input.endDate,
+    reason: input.reason.trim() || null,
+  });
+
+  if (error) throw new Error(error.message);
+}

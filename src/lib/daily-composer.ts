@@ -1,5 +1,14 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createAnthropicClient } from "./anthropic";
+import {
+  processMissedQuests,
+  getInactiveDaysCount,
+  getHighestCompletionRateSkill,
+} from "./recovery";
+
+// Re-entry mode threshold and quest count — decision #7.
+const REENTRY_INACTIVE_DAYS = 3;
+const REENTRY_QUEST_COUNT = 2;
 
 // Quest count by intensity — CLAUDE.md "Resolved Design Decisions #8".
 const INTENSITY_QUEST_COUNT: Record<string, number> = {
@@ -47,6 +56,8 @@ export async function composeDailyQuests(
   supabase: SupabaseClient,
   userId: string,
 ): Promise<ComposeResult> {
+  await processMissedQuests(supabase, userId);
+
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
 
@@ -90,7 +101,17 @@ export async function composeDailyQuests(
     ]);
 
   const intensity = user?.intensity ?? "balanced";
-  const questCount = INTENSITY_QUEST_COUNT[intensity] ?? 3;
+
+  const inactiveDays = await getInactiveDaysCount(supabase, userId);
+  const reentry = inactiveDays !== null && inactiveDays >= REENTRY_INACTIVE_DAYS;
+  const easyWinSkill = reentry
+    ? await getHighestCompletionRateSkill(supabase, userId)
+    : null;
+
+  const questCount = reentry
+    ? REENTRY_QUEST_COUNT
+    : (INTENSITY_QUEST_COUNT[intensity] ?? 3);
+  const aiQuestCount = easyWinSkill ? questCount - 1 : questCount;
 
   const activeSkills = (skills ?? []).filter((s) => !s.is_maintenance);
   const skillsById = new Map((skills ?? []).map((s) => [s.id, s]));
@@ -119,16 +140,23 @@ export async function composeDailyQuests(
 
   const weeklyFocus = weeklyReview?.recommended_focus ?? null;
 
-  const system = `You are the Daily Composer for a personal RPG-style life-progression app. Generate today's Daily Quests for the user from their skills and recent activity trend.
+  const system = reentry
+    ? `You are the Daily Composer for a personal RPG-style life-progression app. The user is returning after ${inactiveDays} days away — this is a re-entry day, not a normal one.
 Rules:
-- Generate exactly ${questCount} quests.
+- Generate exactly ${aiQuestCount} quest${aiQuestCount === 1 ? "" : "s"}.
+- Make it genuinely easy and welcoming — the lowest realistic bar for that skill. The goal is a quick win, not a real workout.
+- Nothing overwhelming, nothing that implies they should have kept the streak. No guilt, no "let's get back on track" framing.
+- skill_name must exactly match one of the provided skill names, or be null for a general/recovery quest.`
+    : `You are the Daily Composer for a personal RPG-style life-progression app. Generate today's Daily Quests for the user from their skills and recent activity trend.
+Rules:
+- Generate exactly ${aiQuestCount} quests.
 - Each quest must be short, concrete, and completable in one sitting.
 - Prefer skills that have gone quiet recently over ones already worked hard this week — variety matters.
 - skill_name must exactly match one of the provided skill names, or be null for a general/recovery quest.${
-    weeklyFocus
-      ? `\n- At least one quest must target this week's focus: "${weeklyFocus}".`
-      : ""
-  }`;
+        weeklyFocus
+          ? `\n- At least one quest must target this week's focus: "${weeklyFocus}".`
+          : ""
+      }`;
 
   const userPrompt = `Intensity: ${intensity}
 
@@ -138,29 +166,40 @@ ${skillsList || "No skills yet."}
 Activity over the last 14 days:
 ${activitySummary}`;
 
-  const anthropic = createAnthropicClient();
-  const response = await anthropic.messages.create({
-    model: "claude-opus-5",
-    max_tokens: 1024,
-    output_config: {
-      effort: "low",
-      format: { type: "json_schema", schema: QUEST_LIST_SCHEMA },
-    },
-    system,
-    messages: [{ role: "user", content: userPrompt }],
-  });
+  let composedQuests: ComposedQuest[] = [];
 
-  if (response.stop_reason === "refusal") {
-    throw new Error("Daily Composer request was declined");
+  if (aiQuestCount > 0) {
+    const anthropic = createAnthropicClient();
+    const response = await anthropic.messages.create({
+      model: "claude-opus-5",
+      max_tokens: 1024,
+      output_config: {
+        effort: "low",
+        format: { type: "json_schema", schema: QUEST_LIST_SCHEMA },
+      },
+      system,
+      messages: [{ role: "user", content: userPrompt }],
+    });
+
+    if (response.stop_reason === "refusal") {
+      throw new Error("Daily Composer request was declined");
+    }
+
+    const textBlock = response.content.find((b) => b.type === "text");
+    if (!textBlock || textBlock.type !== "text") {
+      throw new Error("Daily Composer returned no text output");
+    }
+
+    const parsed = JSON.parse(textBlock.text) as { quests: ComposedQuest[] };
+    composedQuests = (parsed.quests ?? []).slice(0, aiQuestCount);
   }
 
-  const textBlock = response.content.find((b) => b.type === "text");
-  if (!textBlock || textBlock.type !== "text") {
-    throw new Error("Daily Composer returned no text output");
+  if (easyWinSkill) {
+    composedQuests.push({
+      title: `Just show up: a few easy minutes of ${easyWinSkill.name}`,
+      skill_name: easyWinSkill.name,
+    });
   }
-
-  const parsed = JSON.parse(textBlock.text) as { quests: ComposedQuest[] };
-  const composedQuests = (parsed.quests ?? []).slice(0, questCount);
 
   if (composedQuests.length === 0) {
     return { skipped: "Composer returned no quests" };

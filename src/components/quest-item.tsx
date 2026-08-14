@@ -17,10 +17,12 @@ export type QuestItemData = {
 export function QuestItem({ quest }: { quest: QuestItemData }) {
   const [pending, startTransition] = useTransition();
   const [feedback, setFeedback] = useState<string | null>(null);
-  const [done, setDone] = useState(quest.status !== "pending");
+  const [done, setDone] = useState(quest.status === "completed");
   const [levelUp, setLevelUp] = useState<number | null>(null);
   const router = useRouter();
 
+  const missed = quest.status === "missed";
+  const excluded = quest.status === "excluded";
   const readOnly = quest.status !== "pending";
 
   function handleComplete() {
@@ -46,7 +48,11 @@ export function QuestItem({ quest }: { quest: QuestItemData }) {
   }
 
   return (
-    <div className="flex items-center justify-between rounded-md border border-border bg-background px-3 py-2">
+    <div
+      className={`flex items-center justify-between rounded-md border border-border bg-background px-3 py-2 ${
+        missed || excluded ? "opacity-60" : ""
+      }`}
+    >
       {levelUp !== null && (
         <LevelUpOverlay level={levelUp} onDone={() => setLevelUp(null)} />
       )}
@@ -56,14 +62,24 @@ export function QuestItem({ quest }: { quest: QuestItemData }) {
           onClick={handleComplete}
           disabled={pending || readOnly || done}
           aria-label={`Complete ${quest.title}`}
-          className={`h-5 w-5 shrink-0 rounded border transition-colors ${
+          className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border font-mono text-[10px] transition-colors ${
             done
               ? "border-foreground bg-foreground"
-              : "border-border hover:border-foreground/50"
+              : missed
+                ? "border-border text-muted"
+                : "border-border hover:border-foreground/50"
           }`}
-        />
+        >
+          {missed && "×"}
+        </button>
         <span
-          className={`text-sm ${done ? "text-muted line-through" : "text-foreground"}`}
+          className={`text-sm ${
+            done || missed
+              ? "text-muted line-through"
+              : excluded
+                ? "text-muted italic"
+                : "text-foreground"
+          }`}
         >
           {quest.title}
         </span>
@@ -71,7 +87,12 @@ export function QuestItem({ quest }: { quest: QuestItemData }) {
       <span
         className={`font-mono text-xs ${feedback ? "text-foreground" : "text-muted"}`}
       >
-        {feedback ?? `+${quest.awarded_exp ?? quest.base_exp} EXP`}
+        {feedback ??
+          (missed
+            ? "Missed"
+            : excluded
+              ? "Excused"
+              : `+${quest.awarded_exp ?? quest.base_exp} EXP`)}
       </span>
     </div>
   );

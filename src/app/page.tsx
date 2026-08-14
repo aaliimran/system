@@ -4,6 +4,7 @@ import { characterLevelProgress } from "@/lib/leveling";
 import { statCeiling } from "@/lib/stats";
 import { syncComputedStats } from "@/lib/sync-stats";
 import { syncCharacterLevel } from "@/lib/sync-character-level";
+import { processMissedQuests } from "@/lib/recovery";
 import { StatRadarChart } from "@/components/stat-radar-chart";
 import { AppNav } from "@/components/app-nav";
 import { QuestItem } from "@/components/quest-item";
@@ -31,6 +32,7 @@ export default async function Dashboard() {
     redirect("/onboarding");
   }
 
+  await processMissedQuests(supabase, user.id);
   await syncComputedStats(supabase, user.id);
   const character = await syncCharacterLevel(supabase, user.id);
 
@@ -124,7 +126,7 @@ export default async function Dashboard() {
             </div>
           ) : (
             <p className="text-sm text-muted">
-              No quests yet — the Daily Composer arrives later in the build.
+              No quests yet today — generate or add some on the Quests page.
             </p>
           )}
         </div>
