@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { CATEGORY_LABELS, type SkillCategory, type StatCode } from "@/lib/skills-catalog";
+import { isRedirectError } from "@/lib/is-redirect-error";
 import { createSkill } from "./actions";
 
 const CATEGORY_OPTIONS: SkillCategory[] = [
@@ -44,6 +45,7 @@ export function AddSkillForm() {
       try {
         await createSkill({ name, category, stat, isMaintenance, selfRating });
       } catch (e) {
+        if (isRedirectError(e)) throw e;
         setError(e instanceof Error ? e.message : "Something went wrong");
       }
     });

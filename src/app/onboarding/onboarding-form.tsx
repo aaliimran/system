@@ -7,6 +7,7 @@ import {
   type SkillCategory,
 } from "@/lib/skills-catalog";
 import { CEFR_TIERS, type CefrTier } from "@/lib/onboarding";
+import { isRedirectError } from "@/lib/is-redirect-error";
 import { submitOnboarding, type OnboardingSkillAnswer } from "./actions";
 
 type Intensity = "soft" | "balanced" | "hard";
@@ -53,6 +54,7 @@ export function OnboardingForm() {
       try {
         await submitOnboarding({ intensity, skills });
       } catch (e) {
+        if (isRedirectError(e)) throw e;
         setError(e instanceof Error ? e.message : "Something went wrong");
       }
     });

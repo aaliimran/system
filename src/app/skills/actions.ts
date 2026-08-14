@@ -43,6 +43,9 @@ export async function createSkill(input: CreateSkillInput) {
   });
 
   if (error) {
+    if (error.code === "23505") {
+      throw new Error(`You already have a skill named "${name}"`);
+    }
     throw new Error(error.message);
   }
 
