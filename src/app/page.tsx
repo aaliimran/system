@@ -1,9 +1,10 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { signOut } from "./actions";
 import { characterLevelProgress } from "@/lib/leveling";
-import { computeSkillDerivedStat, statCeiling } from "@/lib/stats";
+import { statCeiling } from "@/lib/stats";
+import { syncComputedStats } from "@/lib/sync-stats";
 import { StatRadarChart } from "@/components/stat-radar-chart";
+import { AppNav } from "@/components/app-nav";
 import type { StatCode } from "@/lib/skills-catalog";
 
 const STAT_ORDER: StatCode[] = ["STR", "END", "VIT", "MIND", "INT"];
@@ -28,9 +29,11 @@ export default async function Dashboard() {
     redirect("/onboarding");
   }
 
-  const [{ data: skills }, { data: dailyQuests }, { data: fatigued }] =
+  await syncComputedStats(supabase, user.id);
+
+  const [{ data: stats }, { data: dailyQuests }, { data: fatigued }] =
     await Promise.all([
-      supabase.from("skills").select("level, linked_stats"),
+      supabase.from("stats").select("code, current_value"),
       supabase
         .from("quests")
         .select("id, title, base_exp, status")
@@ -40,21 +43,14 @@ export default async function Dashboard() {
       supabase.from("skills").select("id").eq("fatigue_active", true),
     ]);
 
-  // MIND/VIT are derived from quest_logs / vitality_logs (decision #4), which
-  // are still empty at this point in Build Order — real values arrive once
-  // the quest loop (steps 5-8) is wired up.
-  const statValues: Record<StatCode, number> = {
-    STR: computeSkillDerivedStat("STR", skills ?? []),
-    END: computeSkillDerivedStat("END", skills ?? []),
-    INT: computeSkillDerivedStat("INT", skills ?? []),
-    MIND: 0,
-    VIT: 0,
-  };
+  const statValues = new Map(
+    (stats ?? []).map((s) => [s.code as StatCode, s.current_value as number]),
+  );
 
   const ceiling = statCeiling(profile.character_level);
   const radarStats = STAT_ORDER.map((code) => ({
     code,
-    value: statValues[code],
+    value: statValues.get(code) ?? 0,
     ceiling,
   }));
 
@@ -67,33 +63,25 @@ export default async function Dashboard() {
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-4 py-10">
-      <header className="flex items-start justify-between">
-        <div>
-          <p className="font-mono text-xs uppercase tracking-[0.2em] text-muted">
-            System
-          </p>
-          <p className="mt-1 font-mono text-5xl text-foreground">
-            Lv {profile.character_level}
-          </p>
-          <div className="mt-3 h-1.5 w-56 overflow-hidden rounded-full bg-border">
-            <div
-              className="h-full rounded-full bg-foreground transition-all"
-              style={{ width: `${percent}%` }}
-            />
-          </div>
-          <p className="mt-1 font-mono text-xs text-muted">
-            {current} / {needed} EXP
-          </p>
+      <AppNav active="/" />
+
+      <div>
+        <p className="font-mono text-xs uppercase tracking-[0.2em] text-muted">
+          System
+        </p>
+        <p className="mt-1 font-mono text-5xl text-foreground">
+          Lv {profile.character_level}
+        </p>
+        <div className="mt-3 h-1.5 w-56 overflow-hidden rounded-full bg-border">
+          <div
+            className="h-full rounded-full bg-foreground transition-all"
+            style={{ width: `${percent}%` }}
+          />
         </div>
-        <form action={signOut}>
-          <button
-            type="submit"
-            className="rounded-md border border-border px-3 py-2 text-xs text-muted transition-colors hover:border-foreground/30 hover:text-foreground"
-          >
-            Sign out
-          </button>
-        </form>
-      </header>
+        <p className="mt-1 font-mono text-xs text-muted">
+          {current} / {needed} EXP
+        </p>
+      </div>
 
       {hasDebuff && (
         <div className="rounded-md border border-border bg-surface px-4 py-2 text-xs text-muted">
