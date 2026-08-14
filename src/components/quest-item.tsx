@@ -101,7 +101,7 @@ export function QuestItem({ quest }: { quest: QuestItemData }) {
           <input
             value={editTitle}
             onChange={(e) => setEditTitle(e.target.value)}
-            className="rounded-md border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-foreground/40"
+            className="rounded-md border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-accent/50"
           />
           <div className="flex items-center gap-2">
             <input
@@ -117,7 +117,7 @@ export function QuestItem({ quest }: { quest: QuestItemData }) {
                 type="button"
                 onClick={handleSaveEdit}
                 disabled={pending || !editTitle.trim()}
-                className="rounded-md bg-foreground px-3 py-1.5 text-xs font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-50"
+                className="rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-accent-foreground transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100"
               >
                 {pending ? "Saving…" : "Save"}
               </button>
@@ -169,10 +169,10 @@ export function QuestItem({ quest }: { quest: QuestItemData }) {
           aria-label={`Complete ${quest.title}`}
           className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border font-mono text-[10px] transition-colors ${
             done
-              ? "border-foreground bg-foreground"
+              ? "border-accent bg-accent"
               : missed
                 ? "border-border text-muted"
-                : "border-border hover:border-foreground/50"
+                : "border-border hover:border-accent/50"
           }`}
         >
           {missed && "×"}
@@ -219,7 +219,7 @@ export function QuestItem({ quest }: { quest: QuestItemData }) {
           </>
         )}
         <span
-          className={`font-mono text-xs ${feedback ? "text-foreground" : "text-muted"}`}
+          className={`font-mono text-xs ${feedback ? "text-accent" : "text-muted"}`}
         >
           {feedback ??
             (missed

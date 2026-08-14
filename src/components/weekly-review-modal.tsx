@@ -97,7 +97,7 @@ export function WeeklyReviewModal({ review }: { review: WeeklyReviewData }) {
           type="button"
           onClick={handleAccept}
           disabled={pending}
-          className="mt-6 w-full rounded-md bg-foreground px-4 py-3 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-50"
+          className="mt-6 w-full rounded-md bg-accent px-4 py-3 text-sm font-medium text-accent-foreground transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100"
         >
           {pending ? "Accepting…" : "Accept new directive"}
         </button>

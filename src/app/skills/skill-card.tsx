@@ -93,7 +93,7 @@ export function SkillCard({
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-foreground/40"
+            className="rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-accent/50"
           />
           <div className="flex gap-3">
             <select
@@ -137,7 +137,7 @@ export function SkillCard({
               type="button"
               onClick={handleSave}
               disabled={pending || !name.trim()}
-              className="rounded-md bg-foreground px-3 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-50"
+              className="rounded-md bg-accent px-3 py-2 text-sm font-medium text-accent-foreground transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100"
             >
               {pending ? "Saving…" : "Save"}
             </button>
@@ -195,7 +195,8 @@ export function SkillCard({
         }`}
       >
         <div
-          className="h-full rounded-full bg-foreground"
+          key={progress.percent}
+          className="glow-pulse h-full rounded-full bg-accent"
           style={{ width: `${progress.percent}%` }}
         />
       </div>

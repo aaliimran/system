@@ -11,7 +11,7 @@ export function BossVictoryOverlay({
 }) {
   return (
     <MomentOverlay kicker="Boss Defeated" onDone={onDone}>
-      <p className="max-w-sm text-2xl font-semibold text-foreground drop-shadow-[0_0_24px_rgba(237,237,238,0.35)]">
+      <p className="max-w-sm text-2xl font-semibold text-accent drop-shadow-[0_0_32px_rgba(34,211,238,0.5)]">
         {questTitle}
       </p>
     </MomentOverlay>

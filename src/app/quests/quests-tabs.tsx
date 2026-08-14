@@ -52,7 +52,7 @@ export function QuestsTabs({
             onClick={() => setActive(tab.type)}
             className={`px-3 py-2 text-sm transition-colors ${
               active === tab.type
-                ? "border-b-2 border-foreground text-foreground"
+                ? "border-b-2 border-accent text-accent"
                 : "text-muted hover:text-foreground"
             }`}
           >

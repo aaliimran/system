@@ -13,6 +13,12 @@ const CATEGORY_ORDER: SkillCategory[] = [
   "PERSONAL_DEVELOPMENT",
 ];
 
+const CATEGORY_DOT: Record<SkillCategory, string> = {
+  PHYSICAL: "bg-amber-500/70",
+  KNOWLEDGE_CRAFT: "bg-accent",
+  PERSONAL_DEVELOPMENT: "bg-violet-400/70",
+};
+
 function levelProgress(level: number, currentExp: number) {
   const levelStart = skillCumulativeExpForLevel(level);
   const levelSpan = skillExpToNext(level);
@@ -81,7 +87,8 @@ export default async function SkillsPage() {
 
         return (
           <section key={category}>
-            <h2 className="text-sm font-medium text-muted">
+            <h2 className="flex items-center gap-2 text-sm font-medium text-muted">
+              <span className={`h-1.5 w-1.5 rounded-full ${CATEGORY_DOT[category]}`} />
               {CATEGORY_LABELS[category]}
             </h2>
             <div className="mt-3 flex flex-col gap-3">

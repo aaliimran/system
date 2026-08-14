@@ -69,9 +69,10 @@ export function StatRadarChart({ stats }: { stats: StatPoint[] }) {
       <polygon
         points={dataPath}
         fill="var(--accent)"
-        fillOpacity={0.12}
+        fillOpacity={0.18}
         stroke="var(--accent)"
         strokeWidth={1.5}
+        style={{ filter: "drop-shadow(0 0 6px rgba(34,211,238,0.35))" }}
       />
 
       {dataPoints.map((p, i) => (

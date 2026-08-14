@@ -67,8 +67,8 @@ export function OnboardingForm() {
               onClick={() => setIntensity(opt.value)}
               className={`rounded-md border px-3 py-3 text-left transition-colors ${
                 intensity === opt.value
-                  ? "border-foreground bg-foreground/10"
-                  : "border-border hover:border-foreground/30"
+                  ? "border-accent bg-accent/10"
+                  : "border-border hover:border-accent/30"
               }`}
             >
               <div className="text-sm font-medium text-foreground">
@@ -108,7 +108,7 @@ export function OnboardingForm() {
                         }
                         className={`h-7 w-7 rounded font-mono text-xs transition-colors ${
                           ratings[skill.key] === n
-                            ? "bg-foreground text-background"
+                            ? "bg-accent text-accent-foreground"
                             : "bg-background text-muted hover:text-foreground"
                         }`}
                       >
@@ -155,7 +155,7 @@ export function OnboardingForm() {
         type="button"
         onClick={handleSubmit}
         disabled={pending}
-        className="rounded-md bg-foreground px-4 py-3 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-50"
+        className="rounded-md bg-accent px-4 py-3 text-sm font-medium text-accent-foreground transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100"
       >
         {pending ? "Creating character…" : "Begin"}
       </button>

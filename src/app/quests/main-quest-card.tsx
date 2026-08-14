@@ -26,7 +26,8 @@ export function MainQuestCard({
         <div className="mt-3">
           <div className="h-1.5 w-full overflow-hidden rounded-full bg-border">
             <div
-              className="h-full rounded-full bg-foreground"
+              key={percent}
+              className="glow-pulse h-full rounded-full bg-accent"
               style={{ width: `${percent}%` }}
             />
           </div>

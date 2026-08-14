@@ -32,7 +32,7 @@ export function AddSkillForm() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="rounded-md border border-border px-3 py-2 text-sm text-muted transition-colors hover:border-foreground/30 hover:text-foreground"
+        className="rounded-md border border-border px-3 py-2 text-sm text-muted transition-colors hover:border-accent/40 hover:text-foreground"
       >
         + Add skill
       </button>
@@ -59,7 +59,7 @@ export function AddSkillForm() {
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-foreground/40"
+            className="rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-accent/50"
             placeholder="e.g. Guitar"
           />
         </div>
@@ -107,7 +107,7 @@ export function AddSkillForm() {
                 onClick={() => setSelfRating(n)}
                 className={`h-7 w-7 rounded font-mono text-xs transition-colors ${
                   selfRating === n
-                    ? "bg-foreground text-background"
+                    ? "bg-accent text-accent-foreground"
                     : "bg-background text-muted hover:text-foreground"
                 }`}
               >
@@ -137,7 +137,7 @@ export function AddSkillForm() {
             type="button"
             onClick={handleSubmit}
             disabled={pending || !name.trim()}
-            className="rounded-md bg-foreground px-3 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-50"
+            className="rounded-md bg-accent px-3 py-2 text-sm font-medium text-accent-foreground transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100"
           >
             {pending ? "Adding…" : "Add skill"}
           </button>

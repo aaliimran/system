@@ -30,7 +30,7 @@ export function AppNav({ active }: { active: AppNavActive }) {
             href={link.href}
             className={`text-sm transition-colors ${
               active === link.href
-                ? "text-foreground"
+                ? "text-accent"
                 : "text-muted hover:text-foreground"
             }`}
           >
@@ -41,7 +41,7 @@ export function AppNav({ active }: { active: AppNavActive }) {
       <form action={signOut} className="shrink-0">
         <button
           type="submit"
-          className="rounded-md border border-border px-3 py-2 text-xs text-muted transition-colors hover:border-foreground/30 hover:text-foreground"
+          className="rounded-md border border-border px-3 py-2 text-xs text-muted transition-colors hover:border-accent/40 hover:text-foreground"
         >
           Sign out
         </button>

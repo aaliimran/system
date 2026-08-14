@@ -55,7 +55,7 @@ export function StatDetailCard({
               onClick={() => setRange(r)}
               className={`rounded px-2 py-1 font-mono text-xs transition-colors ${
                 range === r
-                  ? "bg-foreground text-background"
+                  ? "bg-accent text-accent-foreground"
                   : "text-muted hover:text-foreground"
               }`}
             >

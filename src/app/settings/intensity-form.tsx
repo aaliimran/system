@@ -44,8 +44,8 @@ export function IntensityForm({ current }: { current: Intensity }) {
             disabled={pending}
             className={`rounded-md border px-3 py-3 text-left transition-colors disabled:opacity-50 ${
               selected === opt.value
-                ? "border-foreground bg-foreground/10"
-                : "border-border hover:border-foreground/30"
+                ? "border-accent bg-accent/10"
+                : "border-border hover:border-accent/30"
             }`}
           >
             <div className="text-sm font-medium text-foreground">

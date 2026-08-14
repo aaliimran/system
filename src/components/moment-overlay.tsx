@@ -36,6 +36,10 @@ export function MomentOverlay({
       className={`fixed inset-0 z-50 flex items-center justify-center bg-background/90 backdrop-blur-sm transition-opacity duration-300 ${
         visible ? "opacity-100" : "opacity-0"
       }`}
+      style={{
+        backgroundImage:
+          "radial-gradient(circle at center, rgba(34,211,238,0.08), transparent 60%)",
+      }}
       onClick={() => {
         setVisible(false);
         setTimeout(onDone, 300);

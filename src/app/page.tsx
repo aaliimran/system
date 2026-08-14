@@ -102,12 +102,13 @@ export default async function Dashboard() {
         <p className="font-mono text-xs uppercase tracking-[0.2em] text-muted">
           System
         </p>
-        <p className="mt-1 font-mono text-5xl text-foreground">
+        <p className="mt-1 font-mono text-5xl text-accent">
           Lv {character.newLevel}
         </p>
         <div className="mt-3 h-1.5 w-56 overflow-hidden rounded-full bg-border">
           <div
-            className="h-full rounded-full bg-foreground transition-all"
+            key={percent}
+            className="glow-pulse h-full rounded-full bg-accent transition-all"
             style={{ width: `${percent}%` }}
           />
         </div>
@@ -133,7 +134,7 @@ export default async function Dashboard() {
       <section className="grid grid-cols-2 gap-4">
         <div className="rounded-lg border border-border bg-surface p-4">
           <p className="text-xs text-muted">Streak</p>
-          <p className="mt-1 font-mono text-2xl text-foreground">
+          <p className="mt-1 font-mono text-2xl text-accent">
             {mind.streak}
           </p>
         </div>

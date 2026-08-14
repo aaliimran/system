@@ -51,7 +51,7 @@ export function AddMilestoneForm({
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Milestone title"
-          className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-foreground/40"
+          className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-accent/50"
         />
         <input
           type="date"
@@ -64,7 +64,7 @@ export function AddMilestoneForm({
           type="button"
           onClick={handleSubmit}
           disabled={pending || !title.trim()}
-          className="rounded-md bg-foreground px-3 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-50"
+          className="rounded-md bg-accent px-3 py-2 text-sm font-medium text-accent-foreground transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100"
         >
           {pending ? "Adding…" : "Add"}
         </button>

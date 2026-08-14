@@ -50,13 +50,20 @@ export default async function AchievementsPage() {
           return (
             <div
               key={a.key}
-              className={`rounded-lg border p-4 ${
-                isUnlocked ? "border-border bg-surface" : "border-border/50 opacity-50"
+              className={`rounded-lg border p-4 transition-colors ${
+                isUnlocked
+                  ? "border-accent/30 bg-surface hover:border-accent/50"
+                  : "border-border/50 opacity-50"
               }`}
+              style={
+                isUnlocked
+                  ? { boxShadow: "0 0 12px -4px rgba(34,211,238,0.25)" }
+                  : undefined
+              }
             >
               {isUnlocked ? (
                 <>
-                  <p className="text-sm font-medium text-foreground">{a.name}</p>
+                  <p className="text-sm font-medium text-accent">{a.name}</p>
                   <p className="mt-1 text-xs text-muted">{a.description}</p>
                   <p className="mt-2 font-mono text-[10px] text-muted">
                     {new Date(unlockedAt!).toLocaleDateString()}

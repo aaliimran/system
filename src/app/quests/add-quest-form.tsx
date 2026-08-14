@@ -35,7 +35,7 @@ export function AddQuestForm({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="self-start rounded-md border border-border px-3 py-2 text-sm text-muted transition-colors hover:border-foreground/30 hover:text-foreground"
+        className="self-start rounded-md border border-border px-3 py-2 text-sm text-muted transition-colors hover:border-accent/40 hover:text-foreground"
       >
         + Add {defaultType} quest
       </button>
@@ -71,7 +71,7 @@ export function AddQuestForm({
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-foreground/40"
+            className="rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-accent/50"
             placeholder="e.g. 30 min Korean practice"
           />
         </div>
@@ -101,7 +101,7 @@ export function AddQuestForm({
               min={0}
               value={baseExp}
               onChange={(e) => setBaseExp(Number(e.target.value))}
-              className="rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-foreground/40"
+              className="rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-accent/50"
             />
           </div>
         </div>
@@ -117,7 +117,7 @@ export function AddQuestForm({
             type="button"
             onClick={handleSubmit}
             disabled={pending || !title.trim()}
-            className="rounded-md bg-foreground px-3 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-50"
+            className="rounded-md bg-accent px-3 py-2 text-sm font-medium text-accent-foreground transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100"
           >
             {pending ? "Adding…" : "Add quest"}
           </button>
