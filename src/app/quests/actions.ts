@@ -19,6 +19,7 @@ export type CreateQuestInput = {
   title: string;
   skillId: string | null;
   baseExp: number;
+  parentQuestId?: string | null;
 };
 
 export async function createQuest(input: CreateQuestInput) {
@@ -42,6 +43,7 @@ export async function createQuest(input: CreateQuestInput) {
     title,
     skill_id: input.skillId,
     base_exp: Math.max(0, Math.round(input.baseExp)),
+    parent_quest_id: input.parentQuestId ?? null,
   });
 
   if (error) {
@@ -173,6 +175,55 @@ export async function setLifeHappenedFlag(input: SetLifeHappenedInput) {
     start_date: input.startDate,
     end_date: input.endDate,
     reason: input.reason.trim() || null,
+  });
+
+  if (error) throw new Error(error.message);
+}
+
+// Challenge base EXP is a bonus over the daily base (decision #9 sets Daily
+// at 20; Challenge isn't explicitly listed there, so it's treated as a 1.5x
+// stretch bonus over that baseline).
+const CHALLENGE_BASE_EXP = 30;
+
+const CHALLENGE_TEMPLATES = [
+  (skill: string) => `Push past today: extra session of ${skill}`,
+  (skill: string) => `Bonus round: go further with ${skill} than you planned`,
+  (skill: string) => `Stretch quest: raise the bar in ${skill}`,
+];
+
+export async function requestChallenge() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error("Not signed in");
+  }
+
+  const { data: skills } = await supabase
+    .from("skills")
+    .select("id, name, level")
+    .eq("user_id", user.id)
+    .eq("is_maintenance", false)
+    .order("level", { ascending: false })
+    .limit(1);
+
+  const skill = skills?.[0];
+  if (!skill) {
+    throw new Error("No active skill to build a challenge around yet");
+  }
+
+  const template =
+    CHALLENGE_TEMPLATES[Math.floor(Math.random() * CHALLENGE_TEMPLATES.length)];
+
+  const { error } = await supabase.from("quests").insert({
+    user_id: user.id,
+    type: "challenge",
+    title: template(skill.name),
+    skill_id: skill.id,
+    base_exp: CHALLENGE_BASE_EXP,
+    source: "manual",
   });
 
   if (error) throw new Error(error.message);

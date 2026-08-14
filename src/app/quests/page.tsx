@@ -30,7 +30,7 @@ export default async function QuestsPage() {
   const [{ data: quests }, { data: skills }] = await Promise.all([
     supabase
       .from("quests")
-      .select("id, type, title, base_exp, awarded_exp, status")
+      .select("id, type, title, base_exp, awarded_exp, status, parent_quest_id")
       .order("created_at", { ascending: true }),
     supabase.from("skills").select("id, name").order("name"),
   ]);

@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { completeQuest } from "@/app/quests/actions";
+import { completeQuest, type QuestType } from "@/app/quests/actions";
 import { isRedirectError } from "@/lib/is-redirect-error";
 import { LevelUpOverlay } from "./level-up-overlay";
+import { BossVictoryOverlay } from "./boss-victory-overlay";
 
 export type QuestItemData = {
   id: string;
@@ -12,6 +13,7 @@ export type QuestItemData = {
   base_exp: number;
   status: string;
   awarded_exp: number | null;
+  type: QuestType;
 };
 
 export function QuestItem({ quest }: { quest: QuestItemData }) {
@@ -19,6 +21,8 @@ export function QuestItem({ quest }: { quest: QuestItemData }) {
   const [feedback, setFeedback] = useState<string | null>(null);
   const [done, setDone] = useState(quest.status === "completed");
   const [levelUp, setLevelUp] = useState<number | null>(null);
+  const [bossVictory, setBossVictory] = useState(false);
+  const pendingLevelUp = useRef<number | null>(null);
   const router = useRouter();
 
   const missed = quest.status === "missed";
@@ -36,7 +40,13 @@ export function QuestItem({ quest }: { quest: QuestItemData }) {
             result.leveledUp ? ` — Level ${result.newLevel}!` : ""
           }`,
         );
-        if (result.characterLeveledUp && result.newCharacterLevel) {
+        if (quest.type === "boss") {
+          pendingLevelUp.current =
+            result.characterLeveledUp && result.newCharacterLevel
+              ? result.newCharacterLevel
+              : null;
+          setBossVictory(true);
+        } else if (result.characterLeveledUp && result.newCharacterLevel) {
           setLevelUp(result.newCharacterLevel);
         }
         setTimeout(() => router.refresh(), 1100);
@@ -53,6 +63,18 @@ export function QuestItem({ quest }: { quest: QuestItemData }) {
         missed || excluded ? "opacity-60" : ""
       }`}
     >
+      {bossVictory && (
+        <BossVictoryOverlay
+          questTitle={quest.title}
+          onDone={() => {
+            setBossVictory(false);
+            if (pendingLevelUp.current !== null) {
+              setLevelUp(pendingLevelUp.current);
+              pendingLevelUp.current = null;
+            }
+          }}
+        />
+      )}
       {levelUp !== null && (
         <LevelUpOverlay level={levelUp} onDone={() => setLevelUp(null)} />
       )}

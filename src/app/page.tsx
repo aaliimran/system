@@ -49,7 +49,7 @@ export default async function Dashboard() {
       supabase.from("stats").select("code, current_value"),
       supabase
         .from("quests")
-        .select("id, title, base_exp, awarded_exp, status")
+        .select("id, title, base_exp, awarded_exp, status, type")
         .eq("status", "pending")
         .eq("type", "daily")
         .order("created_at", { ascending: true }),
