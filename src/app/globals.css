@@ -1,26 +1,36 @@
 @import "tailwindcss";
 
+/*
+ * "System" visual direction (CLAUDE.md): restrained, dark, structural.
+ * The app commits to one dark theme rather than following system light/dark —
+ * the RPG feel comes from rare earned moments, not ambient color.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #0a0a0b;
+  --surface: #131315;
+  --border: #232326;
+  --foreground: #ededee;
+  --muted: #8b8b90;
+  --accent: #ededee;
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
   --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  color-scheme: dark;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
