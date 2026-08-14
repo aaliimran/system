@@ -4,10 +4,13 @@ import { characterLevelProgress } from "@/lib/leveling";
 import { statCeiling } from "@/lib/stats";
 import { syncComputedStats } from "@/lib/sync-stats";
 import { syncCharacterLevel } from "@/lib/sync-character-level";
+import { syncMindStat } from "@/lib/sync-mind-stat";
 import { processMissedQuests } from "@/lib/recovery";
 import { StatRadarChart } from "@/components/stat-radar-chart";
 import { AppNav } from "@/components/app-nav";
 import { QuestItem } from "@/components/quest-item";
+import { WeeklyReviewModal } from "@/components/weekly-review-modal";
+import { RunWeeklyReviewButton } from "@/components/run-weekly-review-button";
 import type { StatCode } from "@/lib/skills-catalog";
 
 const STAT_ORDER: StatCode[] = ["STR", "END", "VIT", "MIND", "INT"];
@@ -35,8 +38,13 @@ export default async function Dashboard() {
   await processMissedQuests(supabase, user.id);
   await syncComputedStats(supabase, user.id);
   const character = await syncCharacterLevel(supabase, user.id);
+  const mind = await syncMindStat(
+    supabase,
+    user.id,
+    statCeiling(character.newLevel),
+  );
 
-  const [{ data: stats }, { data: dailyQuests }, { data: fatigued }] =
+  const [{ data: stats }, { data: dailyQuests }, { data: fatigued }, { data: pendingReview }, { data: acceptedReview }] =
     await Promise.all([
       supabase.from("stats").select("code, current_value"),
       supabase
@@ -46,11 +54,28 @@ export default async function Dashboard() {
         .eq("type", "daily")
         .order("created_at", { ascending: true }),
       supabase.from("skills").select("id").eq("fatigue_active", true),
+      supabase
+        .from("weekly_reviews")
+        .select("id, week_start, week_end, stat_deltas, detected_issue, recommended_focus")
+        .eq("user_id", user.id)
+        .eq("accepted", false)
+        .order("week_start", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from("weekly_reviews")
+        .select("recommended_focus")
+        .eq("user_id", user.id)
+        .eq("accepted", true)
+        .order("week_start", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
     ]);
 
   const statValues = new Map(
     (stats ?? []).map((s) => [s.code as StatCode, s.current_value as number]),
   );
+  statValues.set("MIND", mind.value);
 
   const ceiling = statCeiling(character.newLevel);
   const radarStats = STAT_ORDER.map((code) => ({
@@ -68,6 +93,7 @@ export default async function Dashboard() {
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-4 py-10">
+      {pendingReview && <WeeklyReviewModal review={pendingReview} />}
       <AppNav active="/" />
 
       <div>
@@ -105,13 +131,23 @@ export default async function Dashboard() {
       <section className="grid grid-cols-2 gap-4">
         <div className="rounded-lg border border-border bg-surface p-4">
           <p className="text-xs text-muted">Streak</p>
-          <p className="mt-1 font-mono text-2xl text-foreground">0</p>
+          <p className="mt-1 font-mono text-2xl text-foreground">
+            {mind.streak}
+          </p>
         </div>
         <div className="rounded-lg border border-border bg-surface p-4">
           <p className="text-xs text-muted">Weekly focus</p>
-          <p className="mt-1 text-sm text-foreground">Not set yet</p>
+          <p className="mt-1 text-sm text-foreground">
+            {acceptedReview?.recommended_focus ?? "Not set yet"}
+          </p>
         </div>
       </section>
+
+      {!pendingReview && (
+        <div className="flex justify-end">
+          <RunWeeklyReviewButton />
+        </div>
+      )}
 
       <section>
         <h2 className="text-sm font-medium text-foreground">

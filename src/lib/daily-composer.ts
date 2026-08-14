@@ -91,6 +91,7 @@ export async function composeDailyQuests(
         .from("weekly_reviews")
         .select("recommended_focus")
         .eq("user_id", userId)
+        .eq("accepted", true)
         .order("week_start", { ascending: false })
         .limit(1)
         .maybeSingle(),
