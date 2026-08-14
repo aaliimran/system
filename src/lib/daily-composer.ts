@@ -1,0 +1,184 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { createAnthropicClient } from "./anthropic";
+
+// Quest count by intensity — CLAUDE.md "Resolved Design Decisions #8".
+const INTENSITY_QUEST_COUNT: Record<string, number> = {
+  soft: 2,
+  balanced: 3,
+  hard: 4,
+};
+
+// Daily base EXP is fixed, not AI-decided — decision #9.
+const DAILY_BASE_EXP = 20;
+
+const QUEST_LIST_SCHEMA = {
+  type: "object",
+  properties: {
+    quests: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          title: {
+            type: "string",
+            description:
+              "Short, concrete daily quest title completable in one sitting, e.g. '20 min Korean reading'. Never vague like 'work on cybersecurity'.",
+          },
+          skill_name: {
+            type: ["string", "null"],
+            description:
+              "Exact name of one skill from the provided list this quest trains, or null for a general/recovery quest.",
+          },
+        },
+        required: ["title", "skill_name"],
+        additionalProperties: false,
+      },
+    },
+  },
+  required: ["quests"],
+  additionalProperties: false,
+};
+
+type ComposedQuest = { title: string; skill_name: string | null };
+
+export type ComposeResult = { created: number } | { skipped: string };
+
+export async function composeDailyQuests(
+  supabase: SupabaseClient,
+  userId: string,
+): Promise<ComposeResult> {
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+
+  const { data: existing } = await supabase
+    .from("quests")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("type", "daily")
+    .eq("source", "composer")
+    .gte("created_at", todayStart.toISOString())
+    .limit(1);
+
+  if (existing && existing.length > 0) {
+    return { skipped: "Today's quests already generated" };
+  }
+
+  const fourteenDaysAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10);
+
+  const [{ data: user }, { data: skills }, { data: recentLogs }, { data: weeklyReview }] =
+    await Promise.all([
+      supabase.from("users").select("intensity").eq("id", userId).single(),
+      supabase
+        .from("skills")
+        .select("id, name, category, level, is_maintenance")
+        .eq("user_id", userId),
+      supabase
+        .from("quest_logs")
+        .select("log_date, event, quests(title, skill_id)")
+        .eq("user_id", userId)
+        .gte("log_date", fourteenDaysAgo)
+        .order("log_date", { ascending: false }),
+      supabase
+        .from("weekly_reviews")
+        .select("recommended_focus")
+        .eq("user_id", userId)
+        .order("week_start", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ]);
+
+  const intensity = user?.intensity ?? "balanced";
+  const questCount = INTENSITY_QUEST_COUNT[intensity] ?? 3;
+
+  const activeSkills = (skills ?? []).filter((s) => !s.is_maintenance);
+  const skillsById = new Map((skills ?? []).map((s) => [s.id, s]));
+  const skillIdByName = new Map(
+    (skills ?? []).map((s) => [s.name.toLowerCase(), s.id]),
+  );
+
+  const skillsList = activeSkills
+    .map((s) => `- ${s.name} (${s.category}, Lv ${s.level})`)
+    .join("\n");
+
+  type LogRow = {
+    log_date: string;
+    event: string;
+    quests: { title: string; skill_id: string | null } | null;
+  };
+  const activitySummary =
+    ((recentLogs as LogRow[] | null) ?? [])
+      .map((l) => {
+        const skillName = l.quests?.skill_id
+          ? (skillsById.get(l.quests.skill_id)?.name ?? "unlinked skill")
+          : "unlinked";
+        return `${l.log_date}: ${l.event} — ${l.quests?.title ?? "quest"} (${skillName})`;
+      })
+      .join("\n") || "No activity logged in the last 14 days.";
+
+  const weeklyFocus = weeklyReview?.recommended_focus ?? null;
+
+  const system = `You are the Daily Composer for a personal RPG-style life-progression app. Generate today's Daily Quests for the user from their skills and recent activity trend.
+Rules:
+- Generate exactly ${questCount} quests.
+- Each quest must be short, concrete, and completable in one sitting.
+- Prefer skills that have gone quiet recently over ones already worked hard this week — variety matters.
+- skill_name must exactly match one of the provided skill names, or be null for a general/recovery quest.${
+    weeklyFocus
+      ? `\n- At least one quest must target this week's focus: "${weeklyFocus}".`
+      : ""
+  }`;
+
+  const userPrompt = `Intensity: ${intensity}
+
+User's skills:
+${skillsList || "No skills yet."}
+
+Activity over the last 14 days:
+${activitySummary}`;
+
+  const anthropic = createAnthropicClient();
+  const response = await anthropic.messages.create({
+    model: "claude-opus-5",
+    max_tokens: 1024,
+    output_config: {
+      effort: "low",
+      format: { type: "json_schema", schema: QUEST_LIST_SCHEMA },
+    },
+    system,
+    messages: [{ role: "user", content: userPrompt }],
+  });
+
+  if (response.stop_reason === "refusal") {
+    throw new Error("Daily Composer request was declined");
+  }
+
+  const textBlock = response.content.find((b) => b.type === "text");
+  if (!textBlock || textBlock.type !== "text") {
+    throw new Error("Daily Composer returned no text output");
+  }
+
+  const parsed = JSON.parse(textBlock.text) as { quests: ComposedQuest[] };
+  const composedQuests = (parsed.quests ?? []).slice(0, questCount);
+
+  if (composedQuests.length === 0) {
+    return { skipped: "Composer returned no quests" };
+  }
+
+  const rows = composedQuests.map((q) => ({
+    user_id: userId,
+    type: "daily" as const,
+    title: q.title,
+    skill_id: q.skill_name
+      ? (skillIdByName.get(q.skill_name.toLowerCase()) ?? null)
+      : null,
+    base_exp: DAILY_BASE_EXP,
+    source: "composer" as const,
+  }));
+
+  const { error } = await supabase.from("quests").insert(rows);
+  if (error) throw new Error(error.message);
+
+  return { created: rows.length };
+}

@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { skillLevelFromExp } from "@/lib/leveling";
 import { syncComputedStats } from "@/lib/sync-stats";
 import { syncCharacterLevel } from "@/lib/sync-character-level";
+import { composeDailyQuests } from "@/lib/daily-composer";
 
 export type QuestType =
   | "daily"
@@ -129,4 +130,17 @@ export async function completeQuest(questId: string) {
     characterLeveledUp: character.leveledUp,
     newCharacterLevel: character.newLevel,
   };
+}
+
+export async function generateDailyQuests() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error("Not signed in");
+  }
+
+  return composeDailyQuests(supabase, user.id);
 }

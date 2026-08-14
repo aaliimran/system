@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { QuestItem, type QuestItemData } from "@/components/quest-item";
 import { AddQuestForm } from "./add-quest-form";
+import { GenerateDailyButton } from "./generate-daily-button";
 import type { QuestType } from "./actions";
 
 const TABS: { type: QuestType; label: string }[] = [
@@ -45,6 +46,7 @@ export function QuestsTabs({
       </div>
 
       <div className="mt-4 flex flex-col gap-4">
+        {active === "daily" && <GenerateDailyButton />}
         <AddQuestForm key={active} defaultType={active} skills={skills} />
 
         {pending.length === 0 && completed.length === 0 ? (
