@@ -186,8 +186,6 @@ Simple relational schema — no NoSQL/graph DB, not justified at this scale.
 
 **NICE TO HAVE** (defer intentionally):
 - Progress screen with Level Up timeline
-- Codex/History
-- Rank titles (E→S) on top of Level
 - Radar chart for skill sub-categories (e.g. Cybersecurity)
 
 **FUTURE** (do not build yet):
@@ -232,6 +230,15 @@ These were open questions the original concept left unspecified. Resolved delibe
     - *Polymath*: at least one skill level-up in 3+ different top-level categories within a rolling 7-day window.
     - *Plateau Breaker*: a PR/breakthrough in a skill that had zero PRs in the preceding 21 days.
     - *Night Before*: all daily quests completed on the day before a date flagged via a Main Quest milestone due date.
+
+11. **Rank title thresholds** (E→D→C→B→A→S, layered on Character Level per the original concept — see Levels section — which specified the tiers but not where they fall): derived purely from Character Level, not a stored column, computed the same sync-on-read way as other progression state. Breakpoints widen as level increases so rank-ups stay rare relative to level-ups:
+    - E: Lv 1–9
+    - D: Lv 10–19
+    - C: Lv 20–34
+    - B: Lv 35–54
+    - A: Lv 55–79
+    - S: Lv 80+
+    A Rank Up fires its own full-screen moment (bigger than a plain Level Up — same family as the Level Up / Boss Defeated overlays) and a `rank_up` Codex entry. When a quest completion crosses both a level boundary and a rank boundary at once, only the Rank Up overlay shows (it supersedes the redundant Level Up moment for that completion).
 
 ## Build Order (suggested)
 1. Repo scaffold (Next.js + TS + Tailwind + Supabase) + schema/migrations with `user_id`/RLS from the start

@@ -6,6 +6,12 @@ import { completeQuest, updateQuest, deleteQuest, type QuestType } from "@/app/q
 import { isRedirectError } from "@/lib/is-redirect-error";
 import { LevelUpOverlay } from "./level-up-overlay";
 import { BossVictoryOverlay } from "./boss-victory-overlay";
+import { RankUpOverlay } from "./rank-up-overlay";
+import type { Rank } from "@/lib/rank";
+
+type CharacterMoment =
+  | { type: "rank"; rank: Rank }
+  | { type: "level"; level: number };
 
 export type QuestItemData = {
   id: string;
@@ -22,12 +28,13 @@ export function QuestItem({ quest }: { quest: QuestItemData }) {
   const [done, setDone] = useState(quest.status === "completed");
   const [isPr, setIsPr] = useState(false);
   const [levelUp, setLevelUp] = useState<number | null>(null);
+  const [rankUp, setRankUp] = useState<Rank | null>(null);
   const [bossVictory, setBossVictory] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(quest.title);
   const [editExp, setEditExp] = useState(quest.base_exp);
   const [error, setError] = useState<string | null>(null);
-  const pendingLevelUp = useRef<number | null>(null);
+  const pendingMoment = useRef<CharacterMoment | null>(null);
   const router = useRouter();
 
   const missed = quest.status === "missed";
@@ -50,14 +57,20 @@ export function QuestItem({ quest }: { quest: QuestItemData }) {
               : ""
           }`,
         );
-        if (quest.type === "boss") {
-          pendingLevelUp.current =
-            result.characterLeveledUp && result.newCharacterLevel
-              ? result.newCharacterLevel
+        const moment: CharacterMoment | null =
+          result.rankedUp && result.newRank
+            ? { type: "rank", rank: result.newRank }
+            : result.characterLeveledUp && result.newCharacterLevel
+              ? { type: "level", level: result.newCharacterLevel }
               : null;
+
+        if (quest.type === "boss") {
+          pendingMoment.current = moment;
           setBossVictory(true);
-        } else if (result.characterLeveledUp && result.newCharacterLevel) {
-          setLevelUp(result.newCharacterLevel);
+        } else if (moment?.type === "rank") {
+          setRankUp(moment.rank);
+        } else if (moment?.type === "level") {
+          setLevelUp(moment.level);
         }
         setTimeout(() => router.refresh(), 1100);
       } catch (e) {
@@ -151,14 +164,17 @@ export function QuestItem({ quest }: { quest: QuestItemData }) {
           questTitle={quest.title}
           onDone={() => {
             setBossVictory(false);
-            if (pendingLevelUp.current !== null) {
-              setLevelUp(pendingLevelUp.current);
-              pendingLevelUp.current = null;
-            }
+            const moment = pendingMoment.current;
+            pendingMoment.current = null;
+            if (moment?.type === "rank") setRankUp(moment.rank);
+            else if (moment?.type === "level") setLevelUp(moment.level);
           }}
         />
       )}
-      {levelUp !== null && (
+      {rankUp !== null && (
+        <RankUpOverlay rank={rankUp} onDone={() => setRankUp(null)} />
+      )}
+      {rankUp === null && levelUp !== null && (
         <LevelUpOverlay level={levelUp} onDone={() => setLevelUp(null)} />
       )}
       <div className="flex min-w-0 items-center gap-3">

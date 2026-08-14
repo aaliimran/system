@@ -4,6 +4,7 @@ import { characterLevelProgress } from "@/lib/leveling";
 import { statCeiling } from "@/lib/stats";
 import { syncComputedStats } from "@/lib/sync-stats";
 import { syncCharacterLevel } from "@/lib/sync-character-level";
+import { rankForLevel } from "@/lib/rank";
 import { syncMindStat } from "@/lib/sync-mind-stat";
 import { processMissedQuests } from "@/lib/recovery";
 import { checkAchievements } from "@/lib/achievements";
@@ -99,9 +100,14 @@ export default async function Dashboard() {
       <AppNav active="/" />
 
       <div>
-        <p className="font-mono text-xs uppercase tracking-[0.2em] text-muted">
-          System
-        </p>
+        <div className="flex items-center gap-3">
+          <p className="font-mono text-xs uppercase tracking-[0.2em] text-muted">
+            System
+          </p>
+          <span className="rounded border border-accent/40 px-1.5 py-0.5 font-mono text-[10px] text-accent">
+            Rank {rankForLevel(character.newLevel)}
+          </span>
+        </div>
         <p className="mt-1 font-mono text-5xl text-accent">
           Lv {character.newLevel}
         </p>

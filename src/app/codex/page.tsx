@@ -5,6 +5,7 @@ import { AppNav } from "@/components/app-nav";
 const TYPE_LABELS: Record<string, string> = {
   skill_level_up: "Skill",
   character_level_up: "Level",
+  rank_up: "Rank",
   achievement_unlocked: "Achievement",
   boss_defeated: "Boss",
   personal_record: "PR",

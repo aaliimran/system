@@ -223,6 +223,8 @@ export async function completeQuest(questId: string, isPr = false) {
     newLevel,
     characterLeveledUp: character.leveledUp,
     newCharacterLevel: character.newLevel,
+    rankedUp: character.rankedUp,
+    newRank: character.newRank,
     newAchievements,
   };
 }

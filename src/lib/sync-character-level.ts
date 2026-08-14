@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { characterLevelFromExp } from "./leveling";
+import { rankForLevel } from "./rank";
 
 /**
  * Character Level is fed by total EXP across all skills (decision #1).
@@ -19,6 +20,10 @@ export async function syncCharacterLevel(supabase: SupabaseClient, userId: strin
   const newLevel = characterLevelFromExp(totalExp);
   const leveledUp = !!existing && newLevel > existing.character_level;
 
+  const newRank = rankForLevel(newLevel);
+  const rankedUp =
+    !!existing && newRank !== rankForLevel(existing.character_level);
+
   await supabase
     .from("users")
     .update({ character_exp: totalExp, character_level: newLevel })
@@ -33,5 +38,14 @@ export async function syncCharacterLevel(supabase: SupabaseClient, userId: strin
     });
   }
 
-  return { totalExp, newLevel, leveledUp };
+  if (rankedUp) {
+    await supabase.from("codex_entries").insert({
+      user_id: userId,
+      entry_type: "rank_up",
+      title: `Reached Rank ${newRank}`,
+      metadata: { rank: newRank, level: newLevel },
+    });
+  }
+
+  return { totalExp, newLevel, leveledUp, newRank, rankedUp };
 }
