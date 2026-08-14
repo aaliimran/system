@@ -19,3 +19,19 @@ export function skillCumulativeExpForLevel(level: number): number {
 export function streakMultiplier(streakDays: number): number {
   return Math.min(1 + 0.05 * streakDays, 1.5);
 }
+
+/** Cumulative EXP needed to have already reached `level` (character curve). */
+export function characterCumulativeExpForLevel(level: number): number {
+  let total = 0;
+  for (let l = 1; l < level; l++) total += characterExpToNext(l);
+  return total;
+}
+
+/** Progress within the current character level, for the EXP bar. */
+export function characterLevelProgress(level: number, totalExp: number) {
+  const levelStart = characterCumulativeExpForLevel(level);
+  const levelSpan = characterExpToNext(level);
+  const current = Math.max(0, totalExp - levelStart);
+  const percent = levelSpan > 0 ? Math.min(current / levelSpan, 1) * 100 : 0;
+  return { current, needed: levelSpan, percent };
+}
