@@ -15,8 +15,8 @@ export function AppNav({
   active: "/" | "/skills" | "/quests" | "/achievements" | "/settings";
 }) {
   return (
-    <header className="flex items-center justify-between border-b border-border pb-4">
-      <nav className="flex gap-4">
+    <header className="flex items-center gap-3 border-b border-border pb-4">
+      <nav className="flex flex-1 gap-4 overflow-x-auto whitespace-nowrap">
         {LINKS.map((link) => (
           <Link
             key={link.href}
@@ -31,7 +31,7 @@ export function AppNav({
           </Link>
         ))}
       </nav>
-      <form action={signOut}>
+      <form action={signOut} className="shrink-0">
         <button
           type="submit"
           className="rounded-md border border-border px-3 py-2 text-xs text-muted transition-colors hover:border-foreground/30 hover:text-foreground"

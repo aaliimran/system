@@ -77,7 +77,7 @@ export function AddQuestForm({
         </div>
 
         <div className="flex gap-3">
-          <div className="flex flex-1 flex-col gap-1.5">
+          <div className="flex min-w-0 flex-1 flex-col gap-1.5">
             <label className="text-xs text-muted">
               Skill (EXP only counts if linked)
             </label>

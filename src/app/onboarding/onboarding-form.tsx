@@ -93,7 +93,7 @@ export function OnboardingForm() {
                 key={skill.key}
                 className="rounded-md border border-border bg-surface px-4 py-3"
               >
-                <div className="flex items-center justify-between gap-4">
+                <div className="flex flex-wrap items-center justify-between gap-y-2 gap-x-4">
                   <span className="text-sm text-foreground">
                     {skill.name}
                   </span>

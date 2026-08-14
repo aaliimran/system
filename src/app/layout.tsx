@@ -1,5 +1,6 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { ServiceWorkerRegistration } from "@/components/service-worker-registration";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -15,6 +16,15 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "System",
   description: "Personal progression system",
+  manifest: "/manifest.json",
+  icons: { icon: "/icon.svg", apple: "/icon.svg" },
+  appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "System" },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0a0a0b",
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -25,6 +35,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
         {children}
+        <ServiceWorkerRegistration />
       </body>
     </html>
   );

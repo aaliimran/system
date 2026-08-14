@@ -65,7 +65,7 @@ export function AddSkillForm() {
         </div>
 
         <div className="flex gap-3">
-          <div className="flex flex-1 flex-col gap-1.5">
+          <div className="flex min-w-0 flex-1 flex-col gap-1.5">
             <label className="text-xs text-muted">Category</label>
             <select
               value={category}
@@ -79,7 +79,7 @@ export function AddSkillForm() {
               ))}
             </select>
           </div>
-          <div className="flex flex-1 flex-col gap-1.5">
+          <div className="flex min-w-0 flex-1 flex-col gap-1.5">
             <label className="text-xs text-muted">Feeds stat</label>
             <select
               value={stat}
