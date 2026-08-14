@@ -7,16 +7,9 @@ import {
   type SkillCategory,
 } from "@/lib/skills-catalog";
 import { CEFR_TIERS, type CefrTier } from "@/lib/onboarding";
+import { INTENSITY_OPTIONS, type Intensity } from "@/lib/intensity";
 import { isRedirectError } from "@/lib/is-redirect-error";
 import { submitOnboarding, type OnboardingSkillAnswer } from "./actions";
-
-type Intensity = "soft" | "balanced" | "hard";
-
-const INTENSITY_OPTIONS: { value: Intensity; label: string; hint: string }[] = [
-  { value: "soft", label: "Soft", hint: "2 quests/day" },
-  { value: "balanced", label: "Balanced", hint: "3 quests/day" },
-  { value: "hard", label: "Hard", hint: "4 quests/day" },
-];
 
 const CATEGORY_ORDER: SkillCategory[] = [
   "PHYSICAL",

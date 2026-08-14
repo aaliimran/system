@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createAnthropicClient } from "./anthropic";
+import { getIntensityOption } from "./intensity";
 import {
   processMissedQuests,
   getInactiveDaysCount,
@@ -10,14 +11,9 @@ import {
 const REENTRY_INACTIVE_DAYS = 3;
 const REENTRY_QUEST_COUNT = 2;
 
-// Quest count by intensity — CLAUDE.md "Resolved Design Decisions #8".
-const INTENSITY_QUEST_COUNT: Record<string, number> = {
-  soft: 2,
-  balanced: 3,
-  hard: 4,
-};
-
-// Daily base EXP is fixed, not AI-decided — decision #9.
+// Daily base EXP before the intensity multiplier — decision #9 sets the
+// base, decision #8 sets the ×0.8/1.0/1.2 multiplier. Content (title,
+// skill) is AI-decided; the EXP value never is.
 const DAILY_BASE_EXP = 20;
 
 const QUEST_LIST_SCHEMA = {
@@ -100,7 +96,9 @@ export async function composeDailyQuests(
         .maybeSingle(),
     ]);
 
-  const intensity = user?.intensity ?? "balanced";
+  const intensityOption = getIntensityOption(user?.intensity ?? "balanced");
+  const intensity = intensityOption.value;
+  const questBaseExp = Math.round(DAILY_BASE_EXP * intensityOption.expMultiplier);
 
   const inactiveDays = await getInactiveDaysCount(supabase, userId);
   const reentry = inactiveDays !== null && inactiveDays >= REENTRY_INACTIVE_DAYS;
@@ -108,9 +106,7 @@ export async function composeDailyQuests(
     ? await getHighestCompletionRateSkill(supabase, userId)
     : null;
 
-  const questCount = reentry
-    ? REENTRY_QUEST_COUNT
-    : (INTENSITY_QUEST_COUNT[intensity] ?? 3);
+  const questCount = reentry ? REENTRY_QUEST_COUNT : intensityOption.questCount;
   const aiQuestCount = easyWinSkill ? questCount - 1 : questCount;
 
   const activeSkills = (skills ?? []).filter((s) => !s.is_maintenance);
@@ -212,7 +208,7 @@ ${activitySummary}`;
     skill_id: q.skill_name
       ? (skillIdByName.get(q.skill_name.toLowerCase()) ?? null)
       : null,
-    base_exp: DAILY_BASE_EXP,
+    base_exp: questBaseExp,
     source: "composer" as const,
   }));
 

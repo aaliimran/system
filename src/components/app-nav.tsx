@@ -5,9 +5,14 @@ const LINKS = [
   { href: "/", label: "Dashboard" },
   { href: "/skills", label: "Skills" },
   { href: "/quests", label: "Quests" },
+  { href: "/settings", label: "Settings" },
 ];
 
-export function AppNav({ active }: { active: "/" | "/skills" | "/quests" }) {
+export function AppNav({
+  active,
+}: {
+  active: "/" | "/skills" | "/quests" | "/settings";
+}) {
   return (
     <header className="flex items-center justify-between border-b border-border pb-4">
       <nav className="flex gap-4">
