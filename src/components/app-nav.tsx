@@ -6,6 +6,7 @@ const LINKS = [
   { href: "/skills", label: "Skills" },
   { href: "/quests", label: "Quests" },
   { href: "/stats", label: "Stats" },
+  { href: "/progress", label: "Progress" },
   { href: "/achievements", label: "Achievements" },
   { href: "/codex", label: "Codex" },
   { href: "/settings", label: "Settings" },
@@ -16,6 +17,7 @@ export type AppNavActive =
   | "/skills"
   | "/quests"
   | "/stats"
+  | "/progress"
   | "/achievements"
   | "/codex"
   | "/settings";

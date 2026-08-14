@@ -10,7 +10,11 @@ import { rankForLevel } from "./rank";
 export async function syncCharacterLevel(supabase: SupabaseClient, userId: string) {
   const [{ data: skills }, { data: existing }] = await Promise.all([
     supabase.from("skills").select("current_exp").eq("user_id", userId),
-    supabase.from("users").select("character_level").eq("id", userId).single(),
+    supabase
+      .from("users")
+      .select("character_level, character_exp")
+      .eq("id", userId)
+      .single(),
   ]);
 
   const totalExp = (skills ?? []).reduce(
@@ -18,33 +22,61 @@ export async function syncCharacterLevel(supabase: SupabaseClient, userId: strin
     0,
   );
   const newLevel = characterLevelFromExp(totalExp);
-  const leveledUp = !!existing && newLevel > existing.character_level;
-
   const newRank = rankForLevel(newLevel);
-  const rankedUp =
-    !!existing && newRank !== rankForLevel(existing.character_level);
 
-  await supabase
-    .from("users")
-    .update({ character_exp: totalExp, character_level: newLevel })
-    .eq("id", userId);
+  // character_exp is safe to overwrite unconditionally — it's always
+  // recomputed from the source of truth (skills.current_exp).
+  await supabase.from("users").update({ character_exp: totalExp }).eq("id", userId);
 
-  if (leveledUp) {
-    await supabase.from("codex_entries").insert({
-      user_id: userId,
-      entry_type: "character_level_up",
-      title: `Reached Level ${newLevel}`,
-      metadata: { level: newLevel },
-    });
+  if (!existing || existing.character_exp !== totalExp) {
+    await supabase
+      .from("character_exp_history")
+      .insert({ user_id: userId, value: totalExp });
   }
 
-  if (rankedUp) {
-    await supabase.from("codex_entries").insert({
-      user_id: userId,
-      entry_type: "rank_up",
-      title: `Reached Rank ${newRank}`,
-      metadata: { rank: newRank, level: newLevel },
-    });
+  let leveledUp = false;
+  let rankedUp = false;
+
+  if (existing && newLevel !== existing.character_level) {
+    if (newLevel > existing.character_level) {
+      // This runs on every page load, so concurrent calls (two tabs, route
+      // prefetch, etc.) can race here. The `.lt()` condition makes the write
+      // atomic at the DB level — only the call that actually wins the bump
+      // gets a row back and logs the Level Up / Rank Up moment, so the same
+      // transition can't be logged twice.
+      const { data: claimed } = await supabase
+        .from("users")
+        .update({ character_level: newLevel })
+        .eq("id", userId)
+        .lt("character_level", newLevel)
+        .select("character_level")
+        .maybeSingle();
+
+      if (claimed) {
+        leveledUp = true;
+        rankedUp = newRank !== rankForLevel(existing.character_level);
+
+        await supabase.from("codex_entries").insert({
+          user_id: userId,
+          entry_type: "character_level_up",
+          title: `Reached Level ${newLevel}`,
+          metadata: { level: newLevel },
+        });
+
+        if (rankedUp) {
+          await supabase.from("codex_entries").insert({
+            user_id: userId,
+            entry_type: "rank_up",
+            title: `Reached Rank ${newRank}`,
+            metadata: { rank: newRank, level: newLevel },
+          });
+        }
+      }
+    } else {
+      // EXP can't normally decrease, but keep character_level in sync with
+      // its source of truth if it ever does — no moment to log for that.
+      await supabase.from("users").update({ character_level: newLevel }).eq("id", userId);
+    }
   }
 
   return { totalExp, newLevel, leveledUp, newRank, rankedUp };
