@@ -4,9 +4,10 @@ import { signOut } from "@/app/actions";
 const LINKS = [
   { href: "/", label: "Dashboard" },
   { href: "/skills", label: "Skills" },
+  { href: "/quests", label: "Quests" },
 ];
 
-export function AppNav({ active }: { active: "/" | "/skills" }) {
+export function AppNav({ active }: { active: "/" | "/skills" | "/quests" }) {
   return (
     <header className="flex items-center justify-between border-b border-border pb-4">
       <nav className="flex gap-4">

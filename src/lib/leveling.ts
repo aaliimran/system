@@ -15,6 +15,13 @@ export function skillCumulativeExpForLevel(level: number): number {
   return total;
 }
 
+/** Inverse of skillCumulativeExpForLevel — highest level reachable with `totalExp`. */
+export function skillLevelFromExp(totalExp: number): number {
+  let level = 1;
+  while (skillCumulativeExpForLevel(level + 1) <= totalExp) level++;
+  return level;
+}
+
 /** Streak multiplier — CLAUDE.md "Resolved Design Decisions #2". Caps at +50% around a 10-day streak. */
 export function streakMultiplier(streakDays: number): number {
   return Math.min(1 + 0.05 * streakDays, 1.5);

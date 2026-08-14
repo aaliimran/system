@@ -5,6 +5,7 @@ import { statCeiling } from "@/lib/stats";
 import { syncComputedStats } from "@/lib/sync-stats";
 import { StatRadarChart } from "@/components/stat-radar-chart";
 import { AppNav } from "@/components/app-nav";
+import { QuestItem } from "@/components/quest-item";
 import type { StatCode } from "@/lib/skills-catalog";
 
 const STAT_ORDER: StatCode[] = ["STR", "END", "VIT", "MIND", "INT"];
@@ -36,7 +37,7 @@ export default async function Dashboard() {
       supabase.from("stats").select("code, current_value"),
       supabase
         .from("quests")
-        .select("id, title, base_exp, status")
+        .select("id, title, base_exp, awarded_exp, status")
         .eq("status", "pending")
         .eq("type", "daily")
         .order("created_at", { ascending: true }),
@@ -114,19 +115,11 @@ export default async function Dashboard() {
         </h2>
         <div className="mt-3 rounded-lg border border-border bg-surface p-4">
           {dailyQuests && dailyQuests.length > 0 ? (
-            <ul className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2">
               {dailyQuests.map((q) => (
-                <li
-                  key={q.id}
-                  className="flex items-center justify-between text-sm text-foreground"
-                >
-                  <span>{q.title}</span>
-                  <span className="font-mono text-xs text-muted">
-                    +{q.base_exp} EXP
-                  </span>
-                </li>
+                <QuestItem key={q.id} quest={q} />
               ))}
-            </ul>
+            </div>
           ) : (
             <p className="text-sm text-muted">
               No quests yet — the Daily Composer arrives later in the build.
