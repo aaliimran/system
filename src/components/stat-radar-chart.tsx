@@ -82,16 +82,26 @@ export function StatRadarChart({ stats }: { stats: StatPoint[] }) {
       {stats.map((s, i) => {
         const labelPoint = pointAt(i, n, 1.22);
         return (
-          <text
-            key={s.code}
-            x={labelPoint.x}
-            y={labelPoint.y}
-            textAnchor="middle"
-            dominantBaseline="middle"
-            className="fill-muted font-mono text-[11px] uppercase tracking-wider"
-          >
-            {s.code}
-          </text>
+          <g key={s.code}>
+            <text
+              x={labelPoint.x}
+              y={labelPoint.y - 7}
+              textAnchor="middle"
+              dominantBaseline="middle"
+              className="fill-muted font-mono text-[11px] uppercase tracking-wider"
+            >
+              {s.code}
+            </text>
+            <text
+              x={labelPoint.x}
+              y={labelPoint.y + 9}
+              textAnchor="middle"
+              dominantBaseline="middle"
+              className="fill-accent font-mono text-[11px]"
+            >
+              {s.value}
+            </text>
+          </g>
         );
       })}
     </svg>

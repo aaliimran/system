@@ -49,7 +49,10 @@ export default async function CodexPage() {
       </div>
 
       {!entries || entries.length === 0 ? (
-        <p className="text-sm text-muted">Nothing recorded yet.</p>
+        <p className="text-sm text-muted">
+          Nothing recorded yet — level-ups, PRs, and unlocks fill this in
+          automatically as you complete quests.
+        </p>
       ) : (
         <div className="flex flex-col gap-2">
           {entries.map((e) => (

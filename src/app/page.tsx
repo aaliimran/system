@@ -4,7 +4,8 @@ import { characterLevelProgress } from "@/lib/leveling";
 import { statCeiling } from "@/lib/stats";
 import { syncComputedStats } from "@/lib/sync-stats";
 import { syncCharacterLevel } from "@/lib/sync-character-level";
-import { rankForLevel } from "@/lib/rank";
+import { rankForLevel, nextRankFloor } from "@/lib/rank";
+import Link from "next/link";
 import { syncMindStat } from "@/lib/sync-mind-stat";
 import { processMissedQuests } from "@/lib/recovery";
 import { checkAchievements } from "@/lib/achievements";
@@ -93,6 +94,8 @@ export default async function Dashboard() {
   );
 
   const hasDebuff = (fatigued?.length ?? 0) > 0;
+  const nextRank = nextRankFloor(character.newLevel);
+  const levelsToNextRank = nextRank !== null ? nextRank - character.newLevel : null;
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-4 py-10">
@@ -104,7 +107,10 @@ export default async function Dashboard() {
           <p className="font-mono text-xs uppercase tracking-[0.2em] text-muted">
             System
           </p>
-          <span className="rounded border border-accent/40 px-1.5 py-0.5 font-mono text-[10px] text-accent">
+          <span
+            className="rounded border border-accent/40 px-1.5 py-0.5 font-mono text-[10px] text-accent"
+            title="Rank is a rare milestone layered on top of Level (E → D → C → B → A → S) — it moves in big, earned jumps, not every level."
+          >
             Rank {rankForLevel(character.newLevel)}
           </span>
         </div>
@@ -120,14 +126,20 @@ export default async function Dashboard() {
         </div>
         <p className="mt-1 font-mono text-xs text-muted">
           {current} / {needed} EXP
+          {levelsToNextRank !== null && (
+            <span> · {levelsToNextRank} level{levelsToNextRank !== 1 ? "s" : ""} to Rank {rankForLevel(nextRank!)}</span>
+          )}
         </p>
       </div>
 
       {hasDebuff && (
-        <div className="rounded-md border border-border bg-surface px-4 py-2 text-xs text-muted">
+        <div
+          className="rounded-md border border-border bg-surface px-4 py-2 text-xs text-muted"
+          title="Missing a quest never costs you a level — it just applies Fatigue (−20% EXP) on that skill until you complete a related quest again."
+        >
           Fatigue active on {fatigued!.length} skill
-          {fatigued!.length > 1 ? "s" : ""} — complete a related quest to
-          clear it.
+          {fatigued!.length > 1 ? "s" : ""} — no level lost, just −20% EXP on
+          that skill until you complete a related quest.
         </div>
       )}
 
@@ -138,10 +150,13 @@ export default async function Dashboard() {
       </section>
 
       <section className="grid grid-cols-2 gap-4">
-        <div className="rounded-lg border border-border bg-surface p-4">
+        <div
+          className="rounded-lg border border-border bg-surface p-4"
+          title="Consecutive days with at least one completed quest."
+        >
           <p className="text-xs text-muted">Streak</p>
           <p className="mt-1 font-mono text-2xl text-accent">
-            {mind.streak}
+            {mind.streak} day{mind.streak !== 1 ? "s" : ""}
           </p>
         </div>
         <div className="rounded-lg border border-border bg-surface p-4">
@@ -171,7 +186,11 @@ export default async function Dashboard() {
             </div>
           ) : (
             <p className="text-sm text-muted">
-              No quests yet today — generate or add some on the Quests page.
+              No quests yet today —{" "}
+              <Link href="/quests" className="text-accent underline decoration-dotted underline-offset-4">
+                generate or add some on the Quests page
+              </Link>
+              .
             </p>
           )}
         </div>

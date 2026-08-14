@@ -160,12 +160,18 @@ export function SkillCard({
         <div className="flex items-center gap-2">
           <span className="text-sm text-foreground">{skill.name}</span>
           {skill.is_maintenance && (
-            <span className="rounded-full border border-border px-2 py-0.5 text-[10px] uppercase tracking-wide text-muted">
+            <span
+              className="rounded-full border border-border px-2 py-0.5 text-[10px] uppercase tracking-wide text-muted"
+              title="Maintenance skills don't get actively leveled — quests can still reference them, but they're not a growth focus right now."
+            >
               Maintenance
             </span>
           )}
           {skill.fatigue_active && (
-            <span className="rounded-full border border-border px-2 py-0.5 text-[10px] uppercase tracking-wide text-muted opacity-60">
+            <span
+              className="rounded-full border border-border px-2 py-0.5 text-[10px] uppercase tracking-wide text-muted opacity-60"
+              title="You missed a quest tied to this skill — no level lost, just −20% EXP until you complete one for it again."
+            >
               Fatigued
             </span>
           )}

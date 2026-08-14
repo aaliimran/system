@@ -82,7 +82,12 @@ export default async function ProgressPage() {
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-4 py-10">
       <AppNav active="/progress" />
-      <h1 className="text-xl font-semibold text-foreground">Progress</h1>
+      <div>
+        <h1 className="text-xl font-semibold text-foreground">Progress</h1>
+        <p className="mt-1 text-xs text-muted">
+          How far you&apos;ve come — growth over time, not just where you are today.
+        </p>
+      </div>
 
       <section className="rounded-lg border border-border bg-surface p-4">
         <h2 className="text-sm font-medium text-foreground">EXP over time</h2>
@@ -93,6 +98,9 @@ export default async function ProgressPage() {
 
       <section className="rounded-lg border border-border bg-surface p-4">
         <h2 className="text-sm font-medium text-foreground">Then vs now</h2>
+        <p className="mt-1 text-xs text-muted">
+          &quot;Then&quot; is your earliest recorded value for each — not necessarily day one.
+        </p>
         <div className="mt-3 flex flex-col gap-2">
           <div className="flex items-center justify-between rounded-md border border-border px-3 py-2">
             <span className="text-xs text-muted">Level · Rank</span>
@@ -129,7 +137,10 @@ export default async function ProgressPage() {
           Level Up / Rank Up timeline
         </h2>
         {!timeline || timeline.length === 0 ? (
-          <p className="mt-3 text-sm text-muted">Nothing recorded yet.</p>
+          <p className="mt-3 text-sm text-muted">
+            Nothing recorded yet — this fills in the first time you level up
+            or rank up.
+          </p>
         ) : (
           <div className="relative mt-4 flex flex-col gap-4 border-l border-border pl-5">
             {timeline.map((e) => {

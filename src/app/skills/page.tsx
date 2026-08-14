@@ -81,6 +81,12 @@ export default async function SkillsPage() {
         <AddSkillForm />
       </div>
 
+      {(skills?.length ?? 0) === 0 && (
+        <p className="text-sm text-muted">
+          No skills yet — add your first one above to start tracking progress.
+        </p>
+      )}
+
       {CATEGORY_ORDER.map((category) => {
         const categorySkills = skillsByCategory.get(category) ?? [];
         if (categorySkills.length === 0) return null;

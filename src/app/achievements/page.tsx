@@ -40,7 +40,13 @@ export default async function AchievementsPage() {
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-4 py-10">
       <AppNav active="/achievements" />
-      <h1 className="text-xl font-semibold text-foreground">Achievements</h1>
+      <div>
+        <h1 className="text-xl font-semibold text-foreground">Achievements</h1>
+        <p className="mt-1 text-xs text-muted">
+          Hidden ones unlock from real behavior patterns, not click-counters —
+          you won&apos;t know what triggers them until you do.
+        </p>
+      </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         {(catalog ?? []).map((a) => {

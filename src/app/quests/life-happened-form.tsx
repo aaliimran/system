@@ -23,6 +23,7 @@ export function LifeHappenedForm() {
       <button
         type="button"
         onClick={() => setOpen(true)}
+        title="Mark a day or period as excluded — illness, exams, etc. No debuff, but no EXP either. Honest, not punitive."
         className="self-start text-xs text-muted underline decoration-dotted underline-offset-4 transition-colors hover:text-foreground"
       >
         Life happened?

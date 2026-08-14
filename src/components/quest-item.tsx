@@ -208,7 +208,10 @@ export function QuestItem({ quest }: { quest: QuestItemData }) {
       <div className="flex shrink-0 items-center gap-3">
         {editable && (
           <>
-            <label className="flex items-center gap-1.5 text-xs text-muted">
+            <label
+              className="flex items-center gap-1.5 text-xs text-muted"
+              title="Personal Record — mark a real breakthrough for +50% bonus EXP on this quest."
+            >
               <input
                 type="checkbox"
                 checked={isPr}
