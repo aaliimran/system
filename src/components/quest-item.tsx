@@ -20,6 +20,7 @@ export function QuestItem({ quest }: { quest: QuestItemData }) {
   const [pending, startTransition] = useTransition();
   const [feedback, setFeedback] = useState<string | null>(null);
   const [done, setDone] = useState(quest.status === "completed");
+  const [isPr, setIsPr] = useState(false);
   const [levelUp, setLevelUp] = useState<number | null>(null);
   const [bossVictory, setBossVictory] = useState(false);
   const pendingLevelUp = useRef<number | null>(null);
@@ -33,11 +34,15 @@ export function QuestItem({ quest }: { quest: QuestItemData }) {
     if (readOnly || done) return;
     startTransition(async () => {
       try {
-        const result = await completeQuest(quest.id);
+        const result = await completeQuest(quest.id, isPr);
         setDone(true);
         setFeedback(
           `+${result.awardedExp} EXP${
             result.leveledUp ? ` — Level ${result.newLevel}!` : ""
+          }${
+            result.newAchievements.length
+              ? ` · Unlocked: ${result.newAchievements.join(", ")}`
+              : ""
           }`,
         );
         if (quest.type === "boss") {
@@ -106,16 +111,29 @@ export function QuestItem({ quest }: { quest: QuestItemData }) {
           {quest.title}
         </span>
       </div>
-      <span
-        className={`font-mono text-xs ${feedback ? "text-foreground" : "text-muted"}`}
-      >
-        {feedback ??
-          (missed
-            ? "Missed"
-            : excluded
-              ? "Excused"
-              : `+${quest.awarded_exp ?? quest.base_exp} EXP`)}
-      </span>
+      <div className="flex items-center gap-3">
+        {!readOnly && !done && (
+          <label className="flex items-center gap-1.5 text-xs text-muted">
+            <input
+              type="checkbox"
+              checked={isPr}
+              onChange={(e) => setIsPr(e.target.checked)}
+              className="h-3.5 w-3.5"
+            />
+            PR
+          </label>
+        )}
+        <span
+          className={`font-mono text-xs ${feedback ? "text-foreground" : "text-muted"}`}
+        >
+          {feedback ??
+            (missed
+              ? "Missed"
+              : excluded
+                ? "Excused"
+                : `+${quest.awarded_exp ?? quest.base_exp} EXP`)}
+        </span>
+      </div>
     </div>
   );
 }

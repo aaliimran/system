@@ -5,6 +5,7 @@ import { skillLevelFromExp } from "@/lib/leveling";
 import { syncComputedStats } from "@/lib/sync-stats";
 import { syncCharacterLevel } from "@/lib/sync-character-level";
 import { composeDailyQuests } from "@/lib/daily-composer";
+import { checkAchievements } from "@/lib/achievements";
 
 export type QuestType =
   | "daily"
@@ -20,6 +21,7 @@ export type CreateQuestInput = {
   skillId: string | null;
   baseExp: number;
   parentQuestId?: string | null;
+  dueDate?: string | null;
 };
 
 export async function createQuest(input: CreateQuestInput) {
@@ -44,6 +46,7 @@ export async function createQuest(input: CreateQuestInput) {
     skill_id: input.skillId,
     base_exp: Math.max(0, Math.round(input.baseExp)),
     parent_quest_id: input.parentQuestId ?? null,
+    due_date: input.dueDate ?? null,
   });
 
   if (error) {
@@ -51,7 +54,10 @@ export async function createQuest(input: CreateQuestInput) {
   }
 }
 
-export async function completeQuest(questId: string) {
+// PR/breakthrough bonus — CLAUDE.md "XP System": +50% of the action's normal EXP.
+const PR_EXP_MULTIPLIER = 1.5;
+
+export async function completeQuest(questId: string, isPr = false) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -74,12 +80,19 @@ export async function completeQuest(questId: string) {
     throw new Error("Quest is not pending");
   }
 
-  const awardedExp = quest.base_exp;
+  const awardedExp = isPr
+    ? Math.round(quest.base_exp * PR_EXP_MULTIPLIER)
+    : quest.base_exp;
   const now = new Date().toISOString();
 
   const { error: updateError } = await supabase
     .from("quests")
-    .update({ status: "completed", completed_at: now, awarded_exp: awardedExp })
+    .update({
+      status: "completed",
+      completed_at: now,
+      awarded_exp: awardedExp,
+      is_pr: isPr,
+    })
     .eq("id", questId);
 
   if (updateError) throw new Error(updateError.message);
@@ -100,7 +113,7 @@ export async function completeQuest(questId: string) {
   if (quest.skill_id) {
     const { data: skill } = await supabase
       .from("skills")
-      .select("level, current_exp")
+      .select("name, category, level, current_exp")
       .eq("id", quest.skill_id)
       .single();
 
@@ -118,12 +131,22 @@ export async function completeQuest(questId: string) {
           fatigue_active: false,
         })
         .eq("id", quest.skill_id);
+
+      if (leveledUp) {
+        await supabase.from("codex_entries").insert({
+          user_id: user.id,
+          entry_type: "skill_level_up",
+          title: `${skill.name} reached Lv ${updatedLevel}`,
+          metadata: { skill_id: quest.skill_id, category: skill.category, level: updatedLevel },
+        });
+      }
     }
 
     await syncComputedStats(supabase, user.id);
   }
 
   const character = await syncCharacterLevel(supabase, user.id);
+  const newAchievements = await checkAchievements(supabase, user.id);
 
   return {
     awardedExp,
@@ -131,6 +154,7 @@ export async function completeQuest(questId: string) {
     newLevel,
     characterLeveledUp: character.leveledUp,
     newCharacterLevel: character.newLevel,
+    newAchievements,
   };
 }
 

@@ -16,6 +16,7 @@ export function AddMilestoneForm({
   onDone: () => void;
 }) {
   const [title, setTitle] = useState("");
+  const [dueDate, setDueDate] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const router = useRouter();
@@ -30,8 +31,10 @@ export function AddMilestoneForm({
           skillId: null,
           baseExp: MILESTONE_BASE_EXP,
           parentQuestId,
+          dueDate: dueDate || null,
         });
         setTitle("");
+        setDueDate("");
         onDone();
         router.refresh();
       } catch (e) {
@@ -49,6 +52,13 @@ export function AddMilestoneForm({
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Milestone title"
           className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-foreground/40"
+        />
+        <input
+          type="date"
+          value={dueDate}
+          onChange={(e) => setDueDate(e.target.value)}
+          title="Due date (optional)"
+          className="rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
         />
         <button
           type="button"

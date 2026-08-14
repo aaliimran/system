@@ -5,13 +5,14 @@ const LINKS = [
   { href: "/", label: "Dashboard" },
   { href: "/skills", label: "Skills" },
   { href: "/quests", label: "Quests" },
+  { href: "/achievements", label: "Achievements" },
   { href: "/settings", label: "Settings" },
 ];
 
 export function AppNav({
   active,
 }: {
-  active: "/" | "/skills" | "/quests" | "/settings";
+  active: "/" | "/skills" | "/quests" | "/achievements" | "/settings";
 }) {
   return (
     <header className="flex items-center justify-between border-b border-border pb-4">

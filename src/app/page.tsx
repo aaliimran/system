@@ -6,6 +6,7 @@ import { syncComputedStats } from "@/lib/sync-stats";
 import { syncCharacterLevel } from "@/lib/sync-character-level";
 import { syncMindStat } from "@/lib/sync-mind-stat";
 import { processMissedQuests } from "@/lib/recovery";
+import { checkAchievements } from "@/lib/achievements";
 import { StatRadarChart } from "@/components/stat-radar-chart";
 import { AppNav } from "@/components/app-nav";
 import { QuestItem } from "@/components/quest-item";
@@ -36,6 +37,7 @@ export default async function Dashboard() {
   }
 
   await processMissedQuests(supabase, user.id);
+  await checkAchievements(supabase, user.id);
   await syncComputedStats(supabase, user.id);
   const character = await syncCharacterLevel(supabase, user.id);
   const mind = await syncMindStat(
