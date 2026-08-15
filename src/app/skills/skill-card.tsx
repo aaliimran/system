@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { updateSkill, deleteSkill } from "./actions";
 import { isRedirectError } from "@/lib/is-redirect-error";
 import { CATEGORY_LABELS, type SkillCategory, type StatCode } from "@/lib/skills-catalog";
+import { StatRadarChart } from "@/components/stat-radar-chart";
 
 const CATEGORY_OPTIONS: SkillCategory[] = [
   "PHYSICAL",
@@ -211,13 +212,26 @@ export function SkillCard({
       </p>
 
       {subs.length > 0 && (
-        <div className="mt-3 flex flex-col gap-2 border-t border-border pt-3">
-          {subs.map((sub) => (
-            <div key={sub.id} className="flex items-center justify-between pl-3 text-xs">
-              <span className="text-muted">{sub.name}</span>
-              <span className="font-mono text-muted">Lv {sub.level}</span>
+        <div className="mt-3 flex flex-col gap-3 border-t border-border pt-3">
+          {subs.length >= 3 && (
+            <div className="mx-auto aspect-square w-full max-w-[220px]">
+              <StatRadarChart
+                stats={subs.map((sub) => ({
+                  label: sub.name,
+                  value: sub.level,
+                  ceiling: Math.max(...subs.map((s) => s.level), 10),
+                }))}
+              />
             </div>
-          ))}
+          )}
+          <div className="flex flex-col gap-2">
+            {subs.map((sub) => (
+              <div key={sub.id} className="flex items-center justify-between pl-3 text-xs">
+                <span className="text-muted">{sub.name}</span>
+                <span className="font-mono text-muted">Lv {sub.level}</span>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

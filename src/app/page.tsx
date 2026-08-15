@@ -83,7 +83,7 @@ export default async function Dashboard() {
 
   const ceiling = statCeiling(character.newLevel);
   const radarStats = STAT_ORDER.map((code) => ({
-    code,
+    label: code,
     value: statValues.get(code) ?? 0,
     ceiling,
   }));

@@ -1,7 +1,5 @@
-import type { StatCode } from "@/lib/skills-catalog";
-
-type StatPoint = {
-  code: StatCode;
+export type RadarPoint = {
+  label: string;
   value: number;
   ceiling: number;
 };
@@ -19,7 +17,19 @@ function pointAt(index: number, total: number, fraction: number) {
   };
 }
 
-export function StatRadarChart({ stats }: { stats: StatPoint[] }) {
+// Multi-word labels (e.g. "Reverse Engineering") wrap onto two lines instead
+// of overflowing the chart — single-word ones (STR, Cryptography) stay put.
+function wrapLabel(label: string): string[] {
+  const words = label.split(" ");
+  if (words.length <= 1) return [label.toUpperCase()];
+  const mid = Math.ceil(words.length / 2);
+  return [
+    words.slice(0, mid).join(" ").toUpperCase(),
+    words.slice(mid).join(" ").toUpperCase(),
+  ];
+}
+
+export function StatRadarChart({ stats }: { stats: RadarPoint[] }) {
   const n = stats.length;
   const dataPoints = stats.map((s, i) =>
     pointAt(i, n, Math.min(s.value / s.ceiling, 1)),
@@ -33,7 +43,7 @@ export function StatRadarChart({ stats }: { stats: StatPoint[] }) {
       viewBox={`0 0 ${SIZE} ${SIZE}`}
       className="h-full w-full"
       role="img"
-      aria-label="Stat radar chart"
+      aria-label="Radar chart"
     >
       {RINGS.map((ring) => {
         const ringPoints = stats
@@ -80,21 +90,26 @@ export function StatRadarChart({ stats }: { stats: StatPoint[] }) {
       ))}
 
       {stats.map((s, i) => {
-        const labelPoint = pointAt(i, n, 1.22);
+        const labelPoint = pointAt(i, n, 1.2);
+        const lines = wrapLabel(s.label);
+        const startY = lines.length > 1 ? labelPoint.y - 14 : labelPoint.y - 7;
         return (
-          <g key={s.code}>
+          <g key={s.label}>
+            {lines.map((line, li) => (
+              <text
+                key={li}
+                x={labelPoint.x}
+                y={startY + li * 11}
+                textAnchor="middle"
+                dominantBaseline="middle"
+                className="fill-muted font-mono text-[10px] tracking-wider"
+              >
+                {line}
+              </text>
+            ))}
             <text
               x={labelPoint.x}
-              y={labelPoint.y - 7}
-              textAnchor="middle"
-              dominantBaseline="middle"
-              className="fill-muted font-mono text-[11px] uppercase tracking-wider"
-            >
-              {s.code}
-            </text>
-            <text
-              x={labelPoint.x}
-              y={labelPoint.y + 9}
+              y={startY + lines.length * 11 + 2}
               textAnchor="middle"
               dominantBaseline="middle"
               className="fill-accent font-mono text-[11px]"
