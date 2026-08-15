@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { AppNav } from "@/components/app-nav";
 import { IntensityForm } from "./intensity-form";
+import { TelegramSettingsForm } from "./telegram-settings-form";
 import type { Intensity } from "@/lib/intensity";
 
 export default async function SettingsPage() {
@@ -16,7 +17,7 @@ export default async function SettingsPage() {
 
   const { data: profile } = await supabase
     .from("users")
-    .select("onboarding_completed_at, intensity")
+    .select("onboarding_completed_at, intensity, telegram_chat_id")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -29,6 +30,7 @@ export default async function SettingsPage() {
       <AppNav active="/settings" />
       <h1 className="text-xl font-semibold text-foreground">Settings</h1>
       <IntensityForm current={(profile.intensity as Intensity) ?? "balanced"} />
+      <TelegramSettingsForm linked={!!profile.telegram_chat_id} />
     </div>
   );
 }

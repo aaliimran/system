@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { composeWeeklyReview } from "@/lib/weekly-analyst";
+import { sendTelegramMessage } from "@/lib/telegram";
 
 // Vercel Cron Jobs send `Authorization: Bearer ${CRON_SECRET}` — see
 // CLAUDE.md "Deployment" (Weekly Review on Sundays) and vercel.json.
@@ -21,6 +22,22 @@ export async function GET(request: Request) {
   for (const u of users ?? []) {
     try {
       const result = await composeWeeklyReview(supabase, u.id);
+
+      if ("created" in result && result.created) {
+        const { data: profile } = await supabase
+          .from("users")
+          .select("telegram_chat_id")
+          .eq("id", u.id)
+          .single();
+
+        if (profile?.telegram_chat_id) {
+          await sendTelegramMessage(
+            profile.telegram_chat_id,
+            "Your Weekly Review is ready — open the app to see this week's focus.",
+          );
+        }
+      }
+
       results.push({ userId: u.id, ...result });
     } catch (e) {
       results.push({
